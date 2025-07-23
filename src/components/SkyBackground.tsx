@@ -87,12 +87,15 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
     // Change biome every 2500 units of distance
     const biomeIndex = Math.floor(distance / 2500) % 4;
     const biomes = [
-      { name: 'forest', bg: pixelForest, opacity: 0.8 },
-      { name: 'ocean', bg: pixelOcean, opacity: 0.7 },
-      { name: 'city', bg: pixelCity, opacity: 0.9 },
-      { name: 'mountains', bg: pixelMountains, opacity: 0.8 }
+      { name: 'forest', bg: pixelForest || '', opacity: 0.8 },
+      { name: 'ocean', bg: pixelOcean || '', opacity: 0.7 },
+      { name: 'city', bg: pixelCity || '', opacity: 0.9 },
+      { name: 'mountains', bg: pixelMountains || '', opacity: 0.8 }
     ];
-    return biomes[biomeIndex];
+    
+    const selectedBiome = biomes[biomeIndex];
+    // Fallback to first biome if selection fails
+    return selectedBiome || biomes[0];
   };
 
   const getCloudOpacity = () => {

@@ -137,15 +137,15 @@ export const useEnhancedGamePhysics = () => {
         prev.worldPosition
       );
       
-      // Update positions
+      // Update positions - remove Y constraint for free flight
       const newWorldPosition = {
         x: prev.worldPosition.x + newPhysics.velocity.x * deltaTime * 60,
-        y: Math.max(0, Math.min(520, prev.worldPosition.y + newPhysics.velocity.y * deltaTime * 60))
+        y: prev.worldPosition.y + newPhysics.velocity.y * deltaTime * 60
       };
       
-      // Screen position with constraints
+      // Screen position with minimal constraints
       let newScreenX = prev.position.x + combinedInputs.direction.x * 6;
-      newScreenX = Math.max(50, Math.min(400, newScreenX));
+      newScreenX = Math.max(20, Math.min(window.innerWidth - 80, newScreenX));
       
       const newPosition = {
         x: newScreenX,
@@ -175,14 +175,18 @@ export const useEnhancedGamePhysics = () => {
       const speed = Math.sqrt(newPhysics.velocity.x * newPhysics.velocity.x + newPhysics.velocity.y * newPhysics.velocity.y);
       const speedLines = speed > 12;
       
-      // Update barrel roll progress
+      // Update barrel roll progress - fix infinite loop
       let barrelRollProgress = prev.barrelRollProgress;
-      if (isBarrelRoll) {
+      let isCurrentlyBarrelRolling = prev.isBarrelRolling;
+      
+      if (isBarrelRoll && !prev.isBarrelRolling) {
         barrelRollProgress = 0;
-      } else if (prev.isBarrelRolling) {
-        barrelRollProgress += deltaTime * 6; // Complete in ~1 second
+        isCurrentlyBarrelRolling = true;
+      } else if (isCurrentlyBarrelRolling) {
+        barrelRollProgress += deltaTime * 6;
         if (barrelRollProgress >= 2 * Math.PI) {
           barrelRollProgress = 0;
+          isCurrentlyBarrelRolling = false;
         }
       }
       
@@ -201,7 +205,7 @@ export const useEnhancedGamePhysics = () => {
         controlState: newControlState,
         distance: newDistance,
         levelComplete,
-        isBarrelRolling: isBarrelRoll || (prev.isBarrelRolling && barrelRollProgress < 2 * Math.PI),
+        isBarrelRolling: isCurrentlyBarrelRolling,
         barrelRollProgress,
         speedLines,
         efficiency,

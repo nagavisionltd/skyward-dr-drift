@@ -4,20 +4,16 @@ import { SkyBackground } from './SkyBackground';
 import { GameControls } from './GameControls';
 import { VirtualJoystick } from './VirtualJoystick';
 import { LevelGoal } from './LevelGoal';
+import { UpdraftZone } from './UpdraftZone';
+import { useFlightPhysics } from '../hooks/useFlightPhysics';
 import { toast } from 'sonner';
 
 interface GameState {
-  playerY: number;
-  playerX: number;
-  worldX: number; // Player's position in the world
-  cameraX: number; // Camera offset
-  velocity: number;
-  forwardSpeed: number;
-  distance: number;
   gameStarted: boolean;
   gameOver: boolean;
   levelComplete: boolean;
-  goalX: number; // Level goal position
+  goalX: number;
+  cameraX: number;
   keys: {
     up: boolean;
     down: boolean;
@@ -34,18 +30,16 @@ interface GameState {
 export const Game = () => {
   const gameRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
+  const lastTimeRef = useRef<number>(0);
+  
+  const { physics, updatePhysics, reset: resetPhysics, updraftZones } = useFlightPhysics();
+  
   const [gameState, setGameState] = useState<GameState>({
-    playerY: 300,
-    playerX: 100,
-    worldX: 100,
-    cameraX: 0,
-    velocity: 0,
-    forwardSpeed: 2,
-    distance: 0,
     gameStarted: false,
     gameOver: false,
     levelComplete: false,
-    goalX: 10000, // Goal at 10000 units - longer level
+    goalX: 10000,
+    cameraX: 0,
     keys: { up: false, down: false, left: false, right: false },
     joystick: { x: 0, y: 0, boost: false }
   });
@@ -104,15 +98,11 @@ export const Game = () => {
       gameStarted: true,
       gameOver: false,
       levelComplete: false,
-      distance: 0,
-      playerY: 300,
-      playerX: 100,
-      worldX: 100,
-      cameraX: 0,
-      velocity: 0,
-      forwardSpeed: 2
+      cameraX: 0
     }));
-    toast("Game started! Fly to the goal!");
+    resetPhysics();
+    lastTimeRef.current = performance.now();
+    toast("Game started! Use physics to reach the goal!");
   };
 
   const resetGame = () => {
@@ -121,14 +111,9 @@ export const Game = () => {
       gameStarted: false,
       gameOver: false,
       levelComplete: false,
-      distance: 0,
-      playerY: 300,
-      playerX: 100,
-      worldX: 100,
-      cameraX: 0,
-      velocity: 0,
-      forwardSpeed: 2
+      cameraX: 0
     }));
+    resetPhysics();
   };
 
   useEffect(() => {
@@ -144,94 +129,44 @@ export const Game = () => {
   useEffect(() => {
     if (!gameState.gameStarted || gameState.gameOver || gameState.levelComplete) return;
 
-    const gameLoop = () => {
+    const gameLoop = (timestamp: number) => {
+      const deltaTime = lastTimeRef.current ? (timestamp - lastTimeRef.current) / 1000 : 0;
+      lastTimeRef.current = timestamp;
+      
+      if (deltaTime > 0.05) return; // Skip large gaps (page was hidden)
+      
+      // Combine keyboard and joystick inputs
+      const upInput = gameState.keys.up || gameState.joystick.y > 0.3;
+      const downInput = gameState.keys.down || gameState.joystick.y < -0.3;
+      const leftInput = gameState.keys.left || gameState.joystick.x < -0.3;
+      const rightInput = gameState.keys.right || gameState.joystick.x > 0.3 || gameState.joystick.boost;
+      
+      updatePhysics({
+        up: upInput,
+        down: downInput,
+        left: leftInput,
+        right: rightInput,
+        deltaTime
+      });
+      
       setGameState(prev => {
-        let newVelocity = prev.velocity;
-        let newY = prev.playerY;
-        let newX = prev.playerX;
-        let newWorldX = prev.worldX;
-        let newForwardSpeed = prev.forwardSpeed;
-        
-        // Apply physics
-        const gravity = 0.01;
-        const thrust = -0.6; // Reduced from -1.2 for slower rising
-        const maxVelocity = 8;
-        const horizontalSpeed = 6; // Increased from 5
-        const maxForwardSpeed = 15; // Increased from 10
-        const forwardAcceleration = 0.2; // Enhanced acceleration
-        
-        // Combine keyboard and joystick inputs
-        const upInput = prev.keys.up || prev.joystick.y > 0.3;
-        const downInput = prev.keys.down || prev.joystick.y < -0.3;
-        const leftInput = prev.keys.left || prev.joystick.x < -0.3;
-        const rightInput = prev.keys.right || prev.joystick.x > 0.3 || prev.joystick.boost;
-        
-        // Forward movement - always moving forward, can accelerate
-        if (rightInput) {
-          newForwardSpeed = Math.min(newForwardSpeed + forwardAcceleration, maxForwardSpeed);
-        } else {
-          newForwardSpeed = Math.max(newForwardSpeed - forwardAcceleration * 0.3, 2);
-        }
-        
-        // Update world position
-        newWorldX += newForwardSpeed;
-        
-        // Vertical movement
-        if (upInput) {
-          newVelocity = Math.max(newVelocity + thrust, -maxVelocity);
-        } else {
-          newVelocity = Math.min(newVelocity + gravity, maxVelocity);
-        }
-        
-        newY += newVelocity;
-        
-        // Left/right movement relative to screen with joystick precision
-        if (leftInput && newX > 50) {
-          const speed = prev.joystick.x ? Math.abs(prev.joystick.x) * horizontalSpeed : horizontalSpeed;
-          newX -= speed;
-        }
-        if (rightInput && newX < 400) { // Allow player to move further right
-          const speed = prev.joystick.x ? Math.abs(prev.joystick.x) * horizontalSpeed * 0.7 : horizontalSpeed * 0.7;
-          newX += speed;
-        }
-        
-        // Camera follows player when they get close to right edge (350+ pixels from left)
+        // Camera follows player when they get close to right edge
         let newCameraX = prev.cameraX;
-        if (newX > 350) {
-          const targetCameraX = newWorldX - 350; // Keep player at 350px from left edge
+        if (physics.position.x > 350) {
+          const targetCameraX = physics.position.worldX - 350;
           newCameraX = prev.cameraX + (targetCameraX - prev.cameraX) * 0.15;
-          newX = 350; // Clamp player position to trigger point
         }
-        
-        // Boundary checking
-        if (newY < 0) {
-          newY = 0;
-          newVelocity = 0;
-        }
-        if (newY > 520) { // Hover above bottom (560 - 40px buffer)
-          newY = 520;
-          newVelocity = 0;
-        }
-        
-        // Update distance based on world position
-        const newDistance = newWorldX;
         
         // Check level completion
         let levelComplete = false;
-        if (newWorldX >= prev.goalX) {
+        if (physics.position.worldX >= prev.goalX) {
           levelComplete = true;
-          toast.success("🎉 Level Complete! Amazing flying!");
+          toast.success("🎉 Level Complete! Master of aerodynamics!");
         }
         
         return {
           ...prev,
-          velocity: newVelocity,
-          playerY: newY,
-          playerX: newX,
-          worldX: newWorldX,
           cameraX: newCameraX,
-          forwardSpeed: newForwardSpeed,
-          distance: newDistance,
           levelComplete
         };
       });
@@ -246,11 +181,11 @@ export const Game = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState.gameStarted, gameState.gameOver, gameState.levelComplete]);
+  }, [gameState.gameStarted, gameState.gameOver, gameState.levelComplete, gameState.keys, gameState.joystick, updatePhysics, physics.position]);
 
   // Motion blur effect based on speed
   const getMotionBlurStyle = () => {
-    const speedFactor = Math.min(gameState.forwardSpeed / 15, 1);
+    const speedFactor = Math.min(physics.speed / 12, 1);
     const blurAmount = speedFactor * 3;
     return {
       filter: `blur(${blurAmount}px)`,
@@ -260,22 +195,30 @@ export const Game = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-sky">
-      <div style={gameState.forwardSpeed > 8 ? getMotionBlurStyle() : {}}>
-        <SkyBackground distance={gameState.distance} forwardSpeed={gameState.forwardSpeed} />
+      <div style={physics.speed > 8 ? getMotionBlurStyle() : {}}>
+        <SkyBackground distance={physics.position.worldX} forwardSpeed={physics.speed} />
       </div>
       
       {gameState.gameStarted && !gameState.gameOver && !gameState.levelComplete && (
         <>
+          <UpdraftZone 
+            worldX={physics.position.worldX}
+            cameraX={gameState.cameraX}
+            zones={updraftZones}
+          />
+          
           <DoctorCharacter 
-            x={gameState.playerX} 
-            y={gameState.playerY}
-            velocity={gameState.velocity}
-            forwardSpeed={gameState.forwardSpeed}
+            x={physics.position.x} 
+            y={physics.position.y}
+            velocity={physics.velocity.y}
+            forwardSpeed={physics.speed}
             keys={gameState.keys}
+            rotation={physics.rotation}
+            stalled={physics.stalled}
           />
           
           <LevelGoal 
-            worldX={gameState.worldX}
+            worldX={physics.position.worldX}
             goalX={gameState.goalX}
             cameraX={gameState.cameraX}
           />
@@ -283,11 +226,17 @@ export const Game = () => {
           <div className="absolute top-4 left-4 z-20">
             <div className="bg-card/90 backdrop-blur-sm rounded-lg p-3 border border-border">
               <p className="text-sm font-semibold text-foreground">
-                Distance: {Math.floor(gameState.distance / 10)}m
+                Distance: {Math.floor(physics.position.worldX / 10)}m
               </p>
               <p className="text-xs text-muted-foreground">
-                Speed: {gameState.forwardSpeed.toFixed(1)}x
+                Speed: {physics.speed.toFixed(1)} | Lift: {physics.lift.toFixed(2)}
               </p>
+              {physics.stalled && (
+                <p className="text-xs text-red-400 font-bold">STALLED!</p>
+              )}
+              {physics.inUpdraft && (
+                <p className="text-xs text-blue-400 font-bold">↑ UPDRAFT</p>
+              )}
             </div>
           </div>
         </>
@@ -305,7 +254,7 @@ export const Game = () => {
         gameStarted={gameState.gameStarted}
         gameOver={gameState.gameOver}
         levelComplete={gameState.levelComplete}
-        distance={gameState.distance}
+        distance={physics.position.worldX}
         onStart={startGame}
         onReset={resetGame}
       />

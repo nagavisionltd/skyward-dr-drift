@@ -5,6 +5,8 @@ interface DoctorCharacterProps {
   y: number;
   velocity: number;
   forwardSpeed: number;
+  rotation?: number;
+  stalled?: boolean;
   keys: {
     up: boolean;
     down: boolean;
@@ -13,7 +15,7 @@ interface DoctorCharacterProps {
   };
 }
 
-export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, keys }: DoctorCharacterProps) => {
+export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, stalled = false, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
   const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
   
@@ -49,34 +51,41 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, keys }: DoctorCh
     return () => clearInterval(interval);
   }, [keys.up, keys.down, keys.left, keys.right]); // Removed lastMovementState from deps
 
-  // Determine rotation based on velocity, movement, and wind effect
+  // Use physics rotation with additional effects
   const getRotation = () => {
-    let rotation = 0;
-    if (velocity < -2) rotation = -15; // Flying up
-    else if (velocity > 2) rotation = 15; // Flying down
+    let finalRotation = rotation;
     
-    if (keys.left) rotation -= 5;
-    if (keys.right) rotation += 5;
-    
-    // Add wind effect at max speed
-    if (forwardSpeed >= 5.5) {
-      rotation += Math.sin(Date.now() * 0.01) * 3; // Gentle sway in the wind
+    // Add wind effect at high speed
+    if (forwardSpeed >= 8) {
+      finalRotation += Math.sin(Date.now() * 0.01) * 2;
     }
     
-    return rotation;
+    // Add stall wobble
+    if (stalled) {
+      finalRotation += Math.sin(Date.now() * 0.02) * 10;
+    }
+    
+    return finalRotation;
   };
 
-  // Get additional wind effects for the character
-  const getWindEffects = () => {
-    if (forwardSpeed >= 5.5) {
+  // Get additional effects for the character
+  const getCharacterEffects = () => {
+    let effects: React.CSSProperties = {};
+    
+    // Wind effects at high speed
+    if (forwardSpeed >= 8) {
       const windSway = Math.sin(Date.now() * 0.008) * 2;
-      const windScale = 1 + Math.sin(Date.now() * 0.012) * 0.05;
-      return {
-        transform: `scaleX(${windScale}) translateX(${windSway}px)`,
-        transition: 'none'
-      };
+      const windScale = 1 + Math.sin(Date.now() * 0.012) * 0.03;
+      effects.transform = `scaleX(${windScale}) translateX(${windSway}px)`;
     }
-    return {};
+    
+    // Stall effects
+    if (stalled) {
+      effects.filter = 'hue-rotate(30deg) brightness(0.8)';
+      effects.animation = 'shake 0.5s ease-in-out infinite';
+    }
+    
+    return effects;
   };
 
   // Character sprites using the uploaded images (excluding cloud image)
@@ -103,11 +112,11 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, keys }: DoctorCh
       <img
         src={getCharacterSprite()}
         alt="Flying Doctor"
-        className="w-12 h-16 pixelated drop-shadow-lg"
+        className={`w-12 h-16 pixelated drop-shadow-lg ${stalled ? 'animate-bounce' : ''}`}
         style={{
           imageRendering: 'pixelated',
           filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
-          ...getWindEffects()
+          ...getCharacterEffects()
         }}
       />
     </div>

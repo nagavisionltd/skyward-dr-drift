@@ -15,14 +15,21 @@ interface DoctorCharacterProps {
 export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
   
-  // Animation cycling
+  // Animation cycling - only when moving
   useEffect(() => {
+    const isMoving = keys.up || keys.down || keys.left || keys.right;
+    
+    if (!isMoving) {
+      setAnimationFrame(0); // Reset to first frame when not moving
+      return;
+    }
+    
     const interval = setInterval(() => {
-      setAnimationFrame(prev => (prev + 1) % 6);
+      setAnimationFrame(prev => (prev + 1) % 5);
     }, 200);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [keys.up, keys.down, keys.left, keys.right]);
 
   // Determine rotation based on velocity and movement
   const getRotation = () => {
@@ -36,10 +43,9 @@ export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) 
     return rotation;
   };
 
-  // Character sprites using the uploaded images
+  // Character sprites using the uploaded images (excluding cloud image)
   const getCharacterSprite = () => {
     const sprites = [
-      '/lovable-uploads/38f5e5c7-aac2-45f8-bcae-642e0c5ca239.png',
       '/lovable-uploads/6ccfd2c3-9961-48ae-bdc2-fad6619a6af3.png',
       '/lovable-uploads/77cce5c4-74e2-4f1b-91a5-a82152dc2b3d.png',
       '/lovable-uploads/c3a3637e-efb0-4a03-9498-43a510244199.png',

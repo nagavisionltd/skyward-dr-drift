@@ -158,8 +158,8 @@ export const Game = () => {
           newX += horizontalSpeed * 0.5; // Slower when also accelerating forward
         }
         
-        // Camera follows player with smooth offset
-        const targetCameraX = newWorldX - 200; // Keep player slightly left of center
+        // Camera follows player with smooth offset - ensure player stays on screen
+        const targetCameraX = newWorldX - newX; // Keep player at their screen position
         const newCameraX = prev.cameraX + (targetCameraX - prev.cameraX) * 0.1;
         
         // Boundary checking
@@ -206,7 +206,7 @@ export const Game = () => {
       {gameState.gameStarted && !gameState.gameOver && (
         <>
           <DoctorCharacter 
-            x={gameState.playerX - gameState.cameraX} 
+            x={gameState.playerX} 
             y={gameState.playerY}
             velocity={gameState.velocity}
             keys={gameState.keys}

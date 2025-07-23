@@ -14,28 +14,74 @@ interface Cloud {
 }
 
 export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
-  // Calculate time of day based on distance
+  // Calculate time of day based on distance with smooth transitions
   const timeProgress = (distance / 1000) % 4; // 4 phases: day, sunset, night, sunrise
   
-  const getSkyGradient = () => {
-    if (timeProgress < 1) {
-      // Day (0-1)
-      return "bg-gradient-to-b from-sky-400 via-sky-300 to-sky-100";
-    } else if (timeProgress < 2) {
-      // Sunset (1-2)
-      return "bg-gradient-to-b from-orange-500 via-pink-400 to-orange-200";
-    } else if (timeProgress < 3) {
-      // Night (2-3)
-      return "bg-gradient-to-b from-indigo-900 via-purple-900 to-blue-900";
-    } else {
-      // Sunrise (3-4)
-      return "bg-gradient-to-b from-pink-300 via-orange-300 to-yellow-200";
-    }
+  const getSkyStyles = () => {
+    const phase = Math.floor(timeProgress);
+    const transition = timeProgress - phase;
+    
+    // Define sky colors for each phase
+    const skyPhases = {
+      0: { // Day
+        top: "rgb(135, 206, 250)", // sky-400
+        middle: "rgb(147, 197, 253)", // sky-300  
+        bottom: "rgb(224, 242, 254)" // sky-100
+      },
+      1: { // Sunset
+        top: "rgb(249, 115, 22)", // orange-500
+        middle: "rgb(251, 146, 60)", // pink-400 equivalent
+        bottom: "rgb(254, 215, 170)" // orange-200
+      },
+      2: { // Night
+        top: "rgb(49, 46, 129)", // indigo-900
+        middle: "rgb(88, 28, 135)", // purple-900
+        bottom: "rgb(30, 58, 138)" // blue-900
+      },
+      3: { // Sunrise
+        top: "rgb(252, 165, 165)", // pink-300
+        middle: "rgb(253, 186, 116)", // orange-300
+        bottom: "rgb(254, 240, 138)" // yellow-200
+      }
+    };
+    
+    const currentPhase = skyPhases[phase as keyof typeof skyPhases];
+    const nextPhase = skyPhases[((phase + 1) % 4) as keyof typeof skyPhases];
+    
+    // Interpolate between current and next phase
+    const interpolateColor = (color1: string, color2: string, factor: number) => {
+      const rgb1 = color1.match(/\d+/g)?.map(Number) || [0, 0, 0];
+      const rgb2 = color2.match(/\d+/g)?.map(Number) || [0, 0, 0];
+      
+      const r = Math.round(rgb1[0] + (rgb2[0] - rgb1[0]) * factor);
+      const g = Math.round(rgb1[1] + (rgb2[1] - rgb1[1]) * factor);
+      const b = Math.round(rgb1[2] + (rgb2[2] - rgb1[2]) * factor);
+      
+      return `rgb(${r}, ${g}, ${b})`;
+    };
+    
+    return {
+      background: `linear-gradient(to bottom, 
+        ${interpolateColor(currentPhase.top, nextPhase.top, transition)}, 
+        ${interpolateColor(currentPhase.middle, nextPhase.middle, transition)}, 
+        ${interpolateColor(currentPhase.bottom, nextPhase.bottom, transition)})`
+    };
   };
 
   const getCloudOpacity = () => {
-    // Reduce cloud visibility at night
-    return timeProgress >= 2 && timeProgress < 3 ? 0.3 : 0.8;
+    // Reduce cloud visibility at night with smooth transition
+    if (timeProgress >= 1.5 && timeProgress < 2.5) {
+      return 0.3; // Night
+    } else if (timeProgress >= 1.2 && timeProgress < 1.8) {
+      // Transition to night
+      const factor = (timeProgress - 1.2) / 0.6;
+      return 0.8 - (0.5 * factor);
+    } else if (timeProgress >= 2.2 && timeProgress < 2.8) {
+      // Transition from night
+      const factor = (timeProgress - 2.2) / 0.6;
+      return 0.3 + (0.5 * factor);
+    }
+    return 0.8;
   };
   // Generate clouds for parallax effect
   const clouds = useMemo(() => {
@@ -126,7 +172,7 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* Dynamic sky gradient background */}
-      <div className={`absolute inset-0 ${getSkyGradient()}`} />
+      <div className="absolute inset-0" style={getSkyStyles()} />
       
       {/* Background image */}
       <div 

@@ -199,6 +199,9 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
       {/* Dynamic pixel art biome backgrounds */}
       {(() => {
         const currentBiome = getCurrentBiome();
+        // Limit transform to prevent disappearing at high speeds
+        const parallaxOffset = Math.min((distance * 0.3) % 100, 50);
+        
         return (
           <div 
             className="absolute inset-0 pixel-art"
@@ -208,29 +211,8 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
               backgroundPosition: 'center bottom',
               backgroundRepeat: 'repeat-x',
               opacity: currentBiome.opacity,
-              transform: `translateX(${-(distance * 0.3) % 100}px)`,
+              transform: `translateX(${-parallaxOffset}px)`,
               imageRendering: 'pixelated',
-              transition: 'opacity 2s ease-in-out'
-            }}
-          />
-        );
-      })()}
-      
-      {/* Secondary parallax layer for depth */}
-      {(() => {
-        const currentBiome = getCurrentBiome();
-        return (
-          <div 
-            className="absolute inset-0 pixel-art"
-            style={{
-              backgroundImage: `url(${currentBiome.bg})`,
-              backgroundSize: '150% auto',
-              backgroundPosition: 'center bottom',
-              backgroundRepeat: 'repeat-x',
-              opacity: currentBiome.opacity * 0.4,
-              transform: `translateX(${-(distance * 0.15) % 150}px) scale(1.2)`,
-              imageRendering: 'pixelated',
-              filter: 'blur(1px)',
               transition: 'opacity 2s ease-in-out'
             }}
           />

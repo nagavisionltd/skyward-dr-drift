@@ -47,7 +47,7 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, keys }: DoctorCh
     }, 200);
     
     return () => clearInterval(interval);
-  }, [keys.up, keys.down, keys.left, keys.right, lastMovementState]);
+  }, [keys.up, keys.down, keys.left, keys.right]); // Removed lastMovementState from deps
 
   // Determine rotation based on velocity, movement, and wind effect
   const getRotation = () => {

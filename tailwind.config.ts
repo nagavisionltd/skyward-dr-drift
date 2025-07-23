@@ -61,7 +61,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Game-specific colors
+				'sky-deep': 'hsl(var(--sky-deep))',
+				'sky-light': 'hsl(var(--sky-light))',
+				'cloud-white': 'hsl(var(--cloud-white))',
+				'cloud-shadow': 'hsl(var(--cloud-shadow))'
+			},
+			backgroundImage: {
+				'gradient-sky': 'var(--gradient-sky)',
+				'gradient-cloud': 'var(--gradient-cloud)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +93,32 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'drift': {
+					'0%': { transform: 'translateX(-100px)' },
+					'100%': { transform: 'translateX(calc(100vw + 100px))' }
+				},
+				'drift-slow': {
+					'0%': { transform: 'translateX(-150px)' },
+					'100%': { transform: 'translateX(calc(100vw + 150px))' }
+				},
+				'bob': {
+					'0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+					'25%': { transform: 'translateY(-5px) rotate(1deg)' },
+					'75%': { transform: 'translateY(5px) rotate(-1deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 3s ease-in-out infinite',
+				'drift': 'drift 20s linear infinite',
+				'drift-slow': 'drift-slow 30s linear infinite',
+				'bob': 'bob 2s ease-in-out infinite'
 			}
 		}
 	},

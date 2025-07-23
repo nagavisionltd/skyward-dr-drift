@@ -3,6 +3,8 @@ export interface BiomeEffect {
   windModifier: number;
   turbulenceModifier: number;
   gravityModifier: number;
+  backgroundImage: string;
+  backgroundOpacity: number;
   specialEffects: {
     updrafts?: Array<{ x: number; strength: number; width: number }>;
     downdrafts?: Array<{ x: number; strength: number; width: number }>;
@@ -10,12 +12,19 @@ export interface BiomeEffect {
   };
 }
 
+import pixelOcean from '@/assets/pixel-ocean.webp';
+import pixelForest from '@/assets/pixel-forest.webp';
+import pixelMountains from '@/assets/pixel-mountains.webp';
+import pixelCity from '@/assets/pixel-city.webp';
+
 export const BIOMES: Record<string, BiomeEffect> = {
   ocean: {
     name: 'Ocean',
     windModifier: 1.2,
     turbulenceModifier: 0.8,
     gravityModifier: 0.95, // Slight updraft from water
+    backgroundImage: pixelOcean,
+    backgroundOpacity: 0.7,
     specialEffects: {
       updrafts: [
         { x: 2000, strength: 0.3, width: 200 },
@@ -29,6 +38,8 @@ export const BIOMES: Record<string, BiomeEffect> = {
     windModifier: 0.7,
     turbulenceModifier: 1.5,
     gravityModifier: 1.0,
+    backgroundImage: pixelForest,
+    backgroundOpacity: 0.8,
     specialEffects: {
       thermals: [
         { x: 1500, y: 400, strength: 0.2, radius: 100 },
@@ -42,6 +53,8 @@ export const BIOMES: Record<string, BiomeEffect> = {
     windModifier: 1.8,
     turbulenceModifier: 2.0,
     gravityModifier: 1.1,
+    backgroundImage: pixelMountains,
+    backgroundOpacity: 0.8,
     specialEffects: {
       updrafts: [
         { x: 1000, strength: 0.6, width: 100 },
@@ -59,6 +72,8 @@ export const BIOMES: Record<string, BiomeEffect> = {
     windModifier: 1.1,
     turbulenceModifier: 1.3,
     gravityModifier: 1.05,
+    backgroundImage: pixelCity,
+    backgroundOpacity: 0.9,
     specialEffects: {
       thermals: [
         { x: 2500, y: 450, strength: 0.4, radius: 150 },

@@ -1,8 +1,5 @@
 import { useMemo } from 'react';
-import pixelForest from '@/assets/pixel-forest.webp';
-import pixelOcean from '@/assets/pixel-ocean.webp';
-import pixelCity from '@/assets/pixel-city.webp';
-import pixelMountains from '@/assets/pixel-mountains.webp';
+import { getBiomeFromDistance } from '@/lib/biomeEffects';
 
 interface SkyBackgroundProps {
   distance: number;
@@ -84,18 +81,7 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
   };
 
   const getCurrentBiome = () => {
-    // Change biome every 2500 units of distance
-    const biomeIndex = Math.floor(distance / 2500) % 4;
-    const biomes = [
-      { name: 'forest', bg: pixelForest || '', opacity: 0.8 },
-      { name: 'ocean', bg: pixelOcean || '', opacity: 0.7 },
-      { name: 'city', bg: pixelCity || '', opacity: 0.9 },
-      { name: 'mountains', bg: pixelMountains || '', opacity: 0.8 }
-    ];
-    
-    const selectedBiome = biomes[biomeIndex];
-    // Fallback to first biome if selection fails
-    return selectedBiome || biomes[0];
+    return getBiomeFromDistance(distance);
   };
 
   const getCloudOpacity = () => {
@@ -233,11 +219,11 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
           <div 
             className="absolute inset-0 pixel-art"
             style={{
-              backgroundImage: `url(${currentBiome.bg})`,
+              backgroundImage: `url(${currentBiome.backgroundImage})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center bottom',
               backgroundRepeat: 'repeat-x',
-              opacity: currentBiome.opacity,
+              opacity: currentBiome.backgroundOpacity,
               transform: `translateX(${-parallaxOffset}px)`,
               imageRendering: 'pixelated',
               transition: 'opacity 2s ease-in-out'

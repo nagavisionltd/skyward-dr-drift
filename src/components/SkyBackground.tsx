@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { getBiomeFromDistance } from '@/lib/biomeEffects';
 
 interface SkyBackgroundProps {
   distance: number;
@@ -20,83 +19,16 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
   const timeProgress = (distance / 1000) % 4; // 4 phases: day, sunset, night, sunrise
   
   const getSkyStyles = () => {
-    const phase = Math.floor(timeProgress) % 4; // Ensure phase is always 0-3
-    const transition = timeProgress - Math.floor(timeProgress);
-    
-    // Define sky colors for each phase
-    const skyPhases = {
-      0: { // Day
-        top: "rgb(135, 206, 250)", // sky-400
-        middle: "rgb(147, 197, 253)", // sky-300  
-        bottom: "rgb(224, 242, 254)" // sky-100
-      },
-      1: { // Sunset
-        top: "rgb(249, 115, 22)", // orange-500
-        middle: "rgb(251, 146, 60)", // pink-400 equivalent
-        bottom: "rgb(254, 215, 170)" // orange-200
-      },
-      2: { // Night
-        top: "rgb(49, 46, 129)", // indigo-900
-        middle: "rgb(88, 28, 135)", // purple-900
-        bottom: "rgb(30, 58, 138)" // blue-900
-      },
-      3: { // Sunrise
-        top: "rgb(252, 165, 165)", // pink-300
-        middle: "rgb(253, 186, 116)", // orange-300
-        bottom: "rgb(254, 240, 138)" // yellow-200
-      }
-    };
-    
-    const currentPhase = skyPhases[phase as keyof typeof skyPhases];
-    const nextPhase = skyPhases[((phase + 1) % 4) as keyof typeof skyPhases];
-    
-    // Safety check to ensure phases exist
-    if (!currentPhase || !nextPhase) {
-      return {
-        background: `linear-gradient(to bottom, 
-          rgb(135, 206, 250), 
-          rgb(147, 197, 253), 
-          rgb(224, 242, 254))`
-      };
-    }
-    
-    // Interpolate between current and next phase
-    const interpolateColor = (color1: string, color2: string, factor: number) => {
-      const rgb1 = color1.match(/\d+/g)?.map(Number) || [0, 0, 0];
-      const rgb2 = color2.match(/\d+/g)?.map(Number) || [0, 0, 0];
-      
-      const r = Math.round(rgb1[0] + (rgb2[0] - rgb1[0]) * factor);
-      const g = Math.round(rgb1[1] + (rgb2[1] - rgb1[1]) * factor);
-      const b = Math.round(rgb1[2] + (rgb2[2] - rgb1[2]) * factor);
-      
-      return `rgb(${r}, ${g}, ${b})`;
-    };
-    
     return {
       background: `linear-gradient(to bottom, 
-        ${interpolateColor(currentPhase.top, nextPhase.top, transition)}, 
-        ${interpolateColor(currentPhase.middle, nextPhase.middle, transition)}, 
-        ${interpolateColor(currentPhase.bottom, nextPhase.bottom, transition)})`
+        rgb(135, 206, 250), 
+        rgb(147, 197, 253), 
+        rgb(224, 242, 254))`
     };
   };
 
-  const getCurrentBiome = () => {
-    return getBiomeFromDistance(distance);
-  };
 
   const getCloudOpacity = () => {
-    // Reduce cloud visibility at night with smooth transition
-    if (timeProgress >= 1.5 && timeProgress < 2.5) {
-      return 0.3; // Night
-    } else if (timeProgress >= 1.2 && timeProgress < 1.8) {
-      // Transition to night
-      const factor = (timeProgress - 1.2) / 0.6;
-      return 0.8 - (0.5 * factor);
-    } else if (timeProgress >= 2.2 && timeProgress < 2.8) {
-      // Transition from night
-      const factor = (timeProgress - 2.2) / 0.6;
-      return 0.3 + (0.5 * factor);
-    }
     return 0.8;
   };
   // Generate clouds and background objects for parallax effect
@@ -206,31 +138,8 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Dynamic sky gradient background */}
+      {/* Basic blue sky gradient background */}
       <div className="absolute inset-0" style={getSkyStyles()} />
-      
-      {/* Dynamic pixel art biome backgrounds */}
-      {(() => {
-        const currentBiome = getCurrentBiome();
-        // Limit transform to prevent disappearing at high speeds
-        const parallaxOffset = Math.min((distance * 0.3) % 100, 50);
-        
-        return (
-          <div 
-            className="absolute inset-0 pixel-art"
-            style={{
-              backgroundImage: `url(${currentBiome.backgroundImage})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center bottom',
-              backgroundRepeat: 'repeat-x',
-              opacity: currentBiome.backgroundOpacity,
-              transform: `translateX(${-parallaxOffset}px)`,
-              imageRendering: 'pixelated',
-              transition: 'opacity 2s ease-in-out'
-            }}
-          />
-        );
-      })()}
       
       {/* Parallax cloud layers */}
       <div className="absolute inset-0">
@@ -238,9 +147,6 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
           <CloudElement key={cloud.id} cloud={cloud} />
         ))}
       </div>
-      
-      {/* Additional atmospheric effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-sky-light/20" />
     </div>
   );
 };

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { DoctorCharacter } from './DoctorCharacter';
 import { SkyBackground } from './SkyBackground';
 import { GameControls } from './GameControls';
+import { VirtualJoystick } from './VirtualJoystick';
+import { LevelGoal } from './LevelGoal';
 import { toast } from 'sonner';
 
 interface GameState {
@@ -14,11 +16,18 @@ interface GameState {
   distance: number;
   gameStarted: boolean;
   gameOver: boolean;
+  levelComplete: boolean;
+  goalX: number; // Level goal position
   keys: {
     up: boolean;
     down: boolean;
     left: boolean;
     right: boolean;
+  };
+  joystick: {
+    x: number;
+    y: number;
+    boost: boolean;
   };
 }
 
@@ -35,7 +44,10 @@ export const Game = () => {
     distance: 0,
     gameStarted: false,
     gameOver: false,
-    keys: { up: false, down: false, left: false, right: false }
+    levelComplete: false,
+    goalX: 5000, // Goal at 5000 units
+    keys: { up: false, down: false, left: false, right: false },
+    joystick: { x: 0, y: 0, boost: false }
   });
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -71,11 +83,27 @@ export const Game = () => {
     }
   }, []);
 
+  // Mobile joystick handlers
+  const handleJoystickDirection = useCallback((direction: { x: number; y: number }) => {
+    setGameState(prev => ({
+      ...prev,
+      joystick: { ...prev.joystick, x: direction.x, y: direction.y }
+    }));
+  }, []);
+
+  const handleJoystickBoost = useCallback((boosting: boolean) => {
+    setGameState(prev => ({
+      ...prev,
+      joystick: { ...prev.joystick, boost: boosting }
+    }));
+  }, []);
+
   const startGame = () => {
     setGameState(prev => ({
       ...prev,
       gameStarted: true,
       gameOver: false,
+      levelComplete: false,
       distance: 0,
       playerY: 300,
       playerX: 100,
@@ -84,7 +112,7 @@ export const Game = () => {
       velocity: 0,
       forwardSpeed: 2
     }));
-    toast("Game started! Use WASD or arrow keys to fly forward!");
+    toast("Game started! Fly to the goal!");
   };
 
   const resetGame = () => {
@@ -92,6 +120,7 @@ export const Game = () => {
       ...prev,
       gameStarted: false,
       gameOver: false,
+      levelComplete: false,
       distance: 0,
       playerY: 300,
       playerX: 100,
@@ -113,7 +142,7 @@ export const Game = () => {
   }, [handleKeyDown, handleKeyUp]);
 
   useEffect(() => {
-    if (!gameState.gameStarted || gameState.gameOver) return;
+    if (!gameState.gameStarted || gameState.gameOver || gameState.levelComplete) return;
 
     const gameLoop = () => {
       setGameState(prev => {
@@ -127,22 +156,28 @@ export const Game = () => {
         const gravity = 0.01;
         const thrust = -0.6; // Reduced from -1.2 for slower rising
         const maxVelocity = 8;
-        const horizontalSpeed = 5; // Increased from 4
-        const maxForwardSpeed = 10; // Increased from 6
-        const forwardAcceleration = 0.15; // Increased acceleration
+        const horizontalSpeed = 6; // Increased from 5
+        const maxForwardSpeed = 15; // Increased from 10
+        const forwardAcceleration = 0.2; // Enhanced acceleration
+        
+        // Combine keyboard and joystick inputs
+        const upInput = prev.keys.up || prev.joystick.y > 0.3;
+        const downInput = prev.keys.down || prev.joystick.y < -0.3;
+        const leftInput = prev.keys.left || prev.joystick.x < -0.3;
+        const rightInput = prev.keys.right || prev.joystick.x > 0.3 || prev.joystick.boost;
         
         // Forward movement - always moving forward, can accelerate
-        if (prev.keys.right) {
+        if (rightInput) {
           newForwardSpeed = Math.min(newForwardSpeed + forwardAcceleration, maxForwardSpeed);
         } else {
-          newForwardSpeed = Math.max(newForwardSpeed - forwardAcceleration * 0.5, 2);
+          newForwardSpeed = Math.max(newForwardSpeed - forwardAcceleration * 0.3, 2);
         }
         
         // Update world position
         newWorldX += newForwardSpeed;
         
         // Vertical movement
-        if (prev.keys.up) {
+        if (upInput) {
           newVelocity = Math.max(newVelocity + thrust, -maxVelocity);
         } else {
           newVelocity = Math.min(newVelocity + gravity, maxVelocity);
@@ -150,12 +185,14 @@ export const Game = () => {
         
         newY += newVelocity;
         
-        // Left/right movement relative to screen
-        if (prev.keys.left && newX > 50) {
-          newX -= horizontalSpeed;
+        // Left/right movement relative to screen with joystick precision
+        if (leftInput && newX > 50) {
+          const speed = prev.joystick.x ? Math.abs(prev.joystick.x) * horizontalSpeed : horizontalSpeed;
+          newX -= speed;
         }
-        if (prev.keys.right && newX < 400) { // Allow player to move further right
-          newX += horizontalSpeed * 0.7; // Slightly slower when also accelerating forward
+        if (rightInput && newX < 400) { // Allow player to move further right
+          const speed = prev.joystick.x ? Math.abs(prev.joystick.x) * horizontalSpeed * 0.7 : horizontalSpeed * 0.7;
+          newX += speed;
         }
         
         // Camera follows player when they get close to right edge (350+ pixels from left)
@@ -179,6 +216,13 @@ export const Game = () => {
         // Update distance based on world position
         const newDistance = newWorldX;
         
+        // Check level completion
+        let levelComplete = false;
+        if (newWorldX >= prev.goalX) {
+          levelComplete = true;
+          toast.success("🎉 Level Complete! Amazing flying!");
+        }
+        
         return {
           ...prev,
           velocity: newVelocity,
@@ -187,7 +231,8 @@ export const Game = () => {
           worldX: newWorldX,
           cameraX: newCameraX,
           forwardSpeed: newForwardSpeed,
-          distance: newDistance
+          distance: newDistance,
+          levelComplete
         };
       });
       
@@ -201,13 +246,25 @@ export const Game = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState.gameStarted, gameState.gameOver]);
+  }, [gameState.gameStarted, gameState.gameOver, gameState.levelComplete]);
+
+  // Motion blur effect based on speed
+  const getMotionBlurStyle = () => {
+    const speedFactor = Math.min(gameState.forwardSpeed / 15, 1);
+    const blurAmount = speedFactor * 3;
+    return {
+      filter: `blur(${blurAmount}px)`,
+      transition: 'filter 0.3s ease'
+    };
+  };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-sky">
-      <SkyBackground distance={gameState.distance} />
+      <div style={gameState.forwardSpeed > 8 ? getMotionBlurStyle() : {}}>
+        <SkyBackground distance={gameState.distance} />
+      </div>
       
-      {gameState.gameStarted && !gameState.gameOver && (
+      {gameState.gameStarted && !gameState.gameOver && !gameState.levelComplete && (
         <>
           <DoctorCharacter 
             x={gameState.playerX} 
@@ -215,6 +272,12 @@ export const Game = () => {
             velocity={gameState.velocity}
             forwardSpeed={gameState.forwardSpeed}
             keys={gameState.keys}
+          />
+          
+          <LevelGoal 
+            worldX={gameState.worldX}
+            goalX={gameState.goalX}
+            cameraX={gameState.cameraX}
           />
           
           <div className="absolute top-4 left-4 z-20">
@@ -230,9 +293,18 @@ export const Game = () => {
         </>
       )}
       
+      {/* Mobile Controls - only show on touch devices */}
+      {gameState.gameStarted && !gameState.gameOver && !gameState.levelComplete && (
+        <VirtualJoystick 
+          onDirectionChange={handleJoystickDirection}
+          onBoost={handleJoystickBoost}
+        />
+      )}
+      
       <GameControls 
         gameStarted={gameState.gameStarted}
         gameOver={gameState.gameOver}
+        levelComplete={gameState.levelComplete}
         distance={gameState.distance}
         onStart={startGame}
         onReset={resetGame}

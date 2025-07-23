@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 interface GameControlsProps {
   gameStarted: boolean;
   gameOver: boolean;
+  levelComplete: boolean;
   distance: number;
   onStart: () => void;
   onReset: () => void;
@@ -12,11 +13,12 @@ interface GameControlsProps {
 export const GameControls = ({ 
   gameStarted, 
   gameOver, 
+  levelComplete,
   distance, 
   onStart, 
   onReset 
 }: GameControlsProps) => {
-  if (gameStarted && !gameOver) {
+  if (gameStarted && !gameOver && !levelComplete) {
     return (
       <div className="absolute bottom-4 left-4 z-20">
         <Card className="bg-card/90 backdrop-blur-sm border-border">
@@ -38,23 +40,43 @@ export const GameControls = ({
       <Card className="w-96 bg-card/95 backdrop-blur-sm border-border shadow-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-primary">
-            Flying Doctor
+            {levelComplete ? "🏁 Level Complete!" : "Flying Doctor"}
           </CardTitle>
           <CardDescription className="text-lg">
-            {!gameStarted 
-              ? "Help the doctor fly through the endless sky!" 
-              : gameOver 
-                ? `Flight completed! You traveled ${Math.floor(distance / 10)}m`
-                : ""
+            {levelComplete 
+              ? `Congratulations! You reached the goal in ${Math.floor(distance / 10)}m!`
+              : !gameStarted 
+                ? "Help the doctor fly through the endless sky!" 
+                : gameOver 
+                  ? `Flight completed! You traveled ${Math.floor(distance / 10)}m`
+                  : ""
             }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!gameStarted ? (
+          {levelComplete ? (
+            <>
+              <div className="text-center">
+                <p className="text-lg font-semibold text-foreground">
+                  🎉 Amazing Flying, Doctor!
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  You successfully reached the goal!
+                </p>
+              </div>
+              <Button 
+                onClick={onReset}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                size="lg"
+              >
+                Play Again
+              </Button>
+            </>
+          ) : !gameStarted ? (
             <>
               <div className="text-center space-y-2 text-sm text-muted-foreground">
-                <p>Use WASD or arrow keys to control your flight</p>
-                <p>Avoid hitting the ground and fly as far as you can!</p>
+                <p>Use WASD/arrow keys or touch controls to fly</p>
+                <p>Reach the goal flag to complete the level!</p>
               </div>
               <Button 
                 onClick={onStart}

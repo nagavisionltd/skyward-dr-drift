@@ -4,6 +4,7 @@ interface DoctorCharacterProps {
   x: number;
   y: number;
   velocity: number;
+  forwardSpeed: number;
   keys: {
     up: boolean;
     down: boolean;
@@ -12,7 +13,7 @@ interface DoctorCharacterProps {
   };
 }
 
-export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) => {
+export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
   const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
   
@@ -48,7 +49,7 @@ export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) 
     return () => clearInterval(interval);
   }, [keys.up, keys.down, keys.left, keys.right, lastMovementState]);
 
-  // Determine rotation based on velocity and movement
+  // Determine rotation based on velocity, movement, and wind effect
   const getRotation = () => {
     let rotation = 0;
     if (velocity < -2) rotation = -15; // Flying up
@@ -57,7 +58,25 @@ export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) 
     if (keys.left) rotation -= 5;
     if (keys.right) rotation += 5;
     
+    // Add wind effect at max speed
+    if (forwardSpeed >= 5.5) {
+      rotation += Math.sin(Date.now() * 0.01) * 3; // Gentle sway in the wind
+    }
+    
     return rotation;
+  };
+
+  // Get additional wind effects for the character
+  const getWindEffects = () => {
+    if (forwardSpeed >= 5.5) {
+      const windSway = Math.sin(Date.now() * 0.008) * 2;
+      const windScale = 1 + Math.sin(Date.now() * 0.012) * 0.05;
+      return {
+        transform: `scaleX(${windScale}) translateX(${windSway}px)`,
+        transition: 'none'
+      };
+    }
+    return {};
   };
 
   // Character sprites using the uploaded images (excluding cloud image)
@@ -87,7 +106,8 @@ export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) 
         className="w-12 h-16 pixelated drop-shadow-lg"
         style={{
           imageRendering: 'pixelated',
-          filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))'
+          filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
+          ...getWindEffects()
         }}
       />
     </div>

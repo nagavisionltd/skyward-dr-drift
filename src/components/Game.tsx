@@ -124,7 +124,7 @@ export const Game = () => {
         let newForwardSpeed = prev.forwardSpeed;
         
         // Apply physics
-        const gravity = 0.05;
+        const gravity = 0.01;
         const thrust = -1.2;
         const maxVelocity = 8;
         const horizontalSpeed = 4;
@@ -209,6 +209,7 @@ export const Game = () => {
             x={gameState.playerX} 
             y={gameState.playerY}
             velocity={gameState.velocity}
+            forwardSpeed={gameState.forwardSpeed}
             keys={gameState.keys}
           />
           

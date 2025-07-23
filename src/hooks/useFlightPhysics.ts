@@ -46,15 +46,15 @@ export const useFlightPhysics = (initialState: Partial<FlightPhysics> = {}) => {
     setPhysics(prev => {
       const { up, down, left, right, deltaTime } = inputs;
       
-      // Physics constants
-      const gravity = 0.5;
-      const drag = 0.98;
-      const thrustPower = 0.8;
-      const maxSpeed = 12;
-      const minFlyingSpeed = 3;
-      const liftCoefficient = 0.15;
-      const stallAngle = 25;
-      const maxBankAngle = 45;
+      // Physics constants - Adjusted for better responsiveness
+      const gravity = 15;
+      const drag = 0.995;
+      const thrustPower = 25;
+      const maxSpeed = 20;
+      const minFlyingSpeed = 1.5; // Reduced from 3
+      const liftCoefficient = 0.4; // Increased from 0.15
+      const stallAngle = 45; // Increased from 25
+      const maxBankAngle = 60;
       
       let newVel = { ...prev.velocity };
       let newPos = { ...prev.position };
@@ -131,25 +131,28 @@ export const useFlightPhysics = (initialState: Partial<FlightPhysics> = {}) => {
         newVel.y *= ratio;
       }
       
-      // Update position
-      newPos.worldX += newVel.x * deltaTime * 60; // Scale for 60fps
+      // Update position - Remove restrictive scaling
+      newPos.worldX += newVel.x * deltaTime * 60;
       newPos.y += newVel.y * deltaTime * 60;
       
-      // Camera following logic
+      // Camera following logic - Allow free movement
       if (newPos.x > 350) {
         const targetCameraX = newPos.worldX - 350;
         newPos.x = 350;
       } else {
-        newPos.x += (newVel.x * deltaTime * 60) * 0.1; // Slow lateral movement on screen
+        newPos.x += newVel.x * deltaTime * 60; // Full movement, not restricted
       }
       
-      // Boundary checking
-      newPos.y = Math.max(0, Math.min(520, newPos.y));
-      newPos.x = Math.max(50, Math.min(400, newPos.x));
+      // Boundary checking - Less restrictive, only prevent going off-screen
+      newPos.y = Math.max(-50, Math.min(570, newPos.y)); // Allow more vertical range
+      newPos.x = Math.max(20, Math.min(450, newPos.x)); // Allow more horizontal range
       
-      // Reset velocity if hitting boundaries
-      if (newPos.y <= 0 || newPos.y >= 520) {
-        newVel.y *= -0.3; // Bounce with energy loss
+      // Gentle boundary effects - Don't kill all momentum
+      if (newPos.y <= -50) {
+        newVel.y = Math.max(newVel.y, 0); // Prevent going further up
+      }
+      if (newPos.y >= 570) {
+        newVel.y = Math.min(newVel.y, 0); // Prevent going further down
       }
       
       return {

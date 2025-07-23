@@ -1,96 +1,134 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { DoctorCharacter } from './DoctorCharacter';
 import { SkyBackground } from './SkyBackground';
 import { GameControls } from './GameControls';
 import { VirtualJoystick } from './VirtualJoystick';
 import { LevelGoal } from './LevelGoal';
-import { FlightInstruments } from './FlightInstruments';
-import { useEnhancedGamePhysics } from '@/hooks/useEnhancedGamePhysics';
-import { getBiomeFromDistance } from '@/lib/biomeEffects';
 import { toast } from 'sonner';
+
+interface GameState {
+  playerY: number;
+  playerX: number;
+  worldX: number; // Player's position in the world
+  cameraX: number; // Camera offset
+  velocity: number;
+  forwardSpeed: number;
+  distance: number;
+  gameStarted: boolean;
+  gameOver: boolean;
+  levelComplete: boolean;
+  goalX: number; // Level goal position
+  keys: {
+    up: boolean;
+    down: boolean;
+    left: boolean;
+    right: boolean;
+  };
+  joystick: {
+    x: number;
+    y: number;
+    boost: boolean;
+  };
+}
 
 export const Game = () => {
   const gameRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
-  const {
-    gameState,
-    updateGamePhysics,
-    startGame,
-    resetGame,
-    setFlightMode,
-    updateKeys,
-    updateJoystick
-  } = useEnhancedGamePhysics();
+  const [gameState, setGameState] = useState<GameState>({
+    playerY: 300,
+    playerX: 100,
+    worldX: 100,
+    cameraX: 0,
+    velocity: 0,
+    forwardSpeed: 2,
+    distance: 0,
+    gameStarted: false,
+    gameOver: false,
+    levelComplete: false,
+    goalX: 10000, // Goal at 10000 units - longer level
+    keys: { up: false, down: false, left: false, right: false },
+    joystick: { x: 0, y: 0, boost: false }
+  });
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const key = e.key.toLowerCase();
-    let newKeys = { ...gameState.keys };
-    
     if (['arrowup', 'w', ' '].includes(key)) {
       e.preventDefault();
-      newKeys.up = true;
+      setGameState(prev => ({ ...prev, keys: { ...prev.keys, up: true } }));
     }
     if (['arrowdown', 's'].includes(key)) {
-      newKeys.down = true;
+      setGameState(prev => ({ ...prev, keys: { ...prev.keys, down: true } }));
     }
     if (['arrowleft', 'a'].includes(key)) {
-      newKeys.left = true;
+      setGameState(prev => ({ ...prev, keys: { ...prev.keys, left: true } }));
     }
     if (['arrowright', 'd'].includes(key)) {
-      newKeys.right = true;
+      setGameState(prev => ({ ...prev, keys: { ...prev.keys, right: true } }));
     }
-    
-    // Flight mode switching
-    if (key === '1') setFlightMode('normal');
-    if (key === '2') setFlightMode('precision');
-    if (key === '3') setFlightMode('speed');
-    
-    updateKeys(newKeys);
-  }, [gameState.keys, setFlightMode, updateKeys]);
+  }, []);
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
     const key = e.key.toLowerCase();
-    let newKeys = { ...gameState.keys };
-    
     if (['arrowup', 'w', ' '].includes(key)) {
-      newKeys.up = false;
+      setGameState(prev => ({ ...prev, keys: { ...prev.keys, up: false } }));
     }
     if (['arrowdown', 's'].includes(key)) {
-      newKeys.down = false;
+      setGameState(prev => ({ ...prev, keys: { ...prev.keys, down: false } }));
     }
     if (['arrowleft', 'a'].includes(key)) {
-      newKeys.left = false;
+      setGameState(prev => ({ ...prev, keys: { ...prev.keys, left: false } }));
     }
     if (['arrowright', 'd'].includes(key)) {
-      newKeys.right = false;
+      setGameState(prev => ({ ...prev, keys: { ...prev.keys, right: false } }));
     }
-    
-    updateKeys(newKeys);
-  }, [gameState.keys, updateKeys]);
+  }, []);
 
   // Mobile joystick handlers
   const handleJoystickDirection = useCallback((direction: { x: number; y: number }) => {
-    updateJoystick({
-      ...gameState.joystick,
-      x: direction.x,
-      y: direction.y
-    });
-  }, [gameState.joystick, updateJoystick]);
+    setGameState(prev => ({
+      ...prev,
+      joystick: { ...prev.joystick, x: direction.x, y: direction.y }
+    }));
+  }, []);
 
   const handleJoystickBoost = useCallback((boosting: boolean) => {
-    updateJoystick({
-      ...gameState.joystick,
-      boost: boosting
-    });
-  }, [gameState.joystick, updateJoystick]);
+    setGameState(prev => ({
+      ...prev,
+      joystick: { ...prev.joystick, boost: boosting }
+    }));
+  }, []);
 
-  const handleStartGame = () => {
-    startGame();
-    toast("Game started! Enhanced physics enabled!");
+  const startGame = () => {
+    setGameState(prev => ({
+      ...prev,
+      gameStarted: true,
+      gameOver: false,
+      levelComplete: false,
+      distance: 0,
+      playerY: 300,
+      playerX: 100,
+      worldX: 100,
+      cameraX: 0,
+      velocity: 0,
+      forwardSpeed: 2
+    }));
+    toast("Game started! Fly to the goal!");
   };
 
-  const handleResetGame = () => {
-    resetGame();
+  const resetGame = () => {
+    setGameState(prev => ({
+      ...prev,
+      gameStarted: false,
+      gameOver: false,
+      levelComplete: false,
+      distance: 0,
+      playerY: 300,
+      playerX: 100,
+      worldX: 100,
+      cameraX: 0,
+      velocity: 0,
+      forwardSpeed: 2
+    }));
   };
 
   useEffect(() => {
@@ -107,12 +145,96 @@ export const Game = () => {
     if (!gameState.gameStarted || gameState.gameOver || gameState.levelComplete) return;
 
     const gameLoop = () => {
-      updateGamePhysics();
-      
-      // Check level completion
-      if (gameState.distance >= gameState.goalX && !gameState.levelComplete) {
-        toast.success("🎉 Level Complete! Masterful flying!");
-      }
+      setGameState(prev => {
+        let newVelocity = prev.velocity;
+        let newY = prev.playerY;
+        let newX = prev.playerX;
+        let newWorldX = prev.worldX;
+        let newForwardSpeed = prev.forwardSpeed;
+        
+        // Apply physics
+        const gravity = 0.01;
+        const thrust = -0.6; // Reduced from -1.2 for slower rising
+        const maxVelocity = 8;
+        const horizontalSpeed = 6; // Increased from 5
+        const maxForwardSpeed = 15; // Increased from 10
+        const forwardAcceleration = 0.2; // Enhanced acceleration
+        
+        // Combine keyboard and joystick inputs
+        const upInput = prev.keys.up || prev.joystick.y > 0.3;
+        const downInput = prev.keys.down || prev.joystick.y < -0.3;
+        const leftInput = prev.keys.left || prev.joystick.x < -0.3;
+        const rightInput = prev.keys.right || prev.joystick.x > 0.3 || prev.joystick.boost;
+        
+        // Forward movement - always moving forward, can accelerate
+        if (rightInput) {
+          newForwardSpeed = Math.min(newForwardSpeed + forwardAcceleration, maxForwardSpeed);
+        } else {
+          newForwardSpeed = Math.max(newForwardSpeed - forwardAcceleration * 0.3, 2);
+        }
+        
+        // Update world position
+        newWorldX += newForwardSpeed;
+        
+        // Vertical movement
+        if (upInput) {
+          newVelocity = Math.max(newVelocity + thrust, -maxVelocity);
+        } else {
+          newVelocity = Math.min(newVelocity + gravity, maxVelocity);
+        }
+        
+        newY += newVelocity;
+        
+        // Left/right movement relative to screen with joystick precision
+        if (leftInput && newX > 50) {
+          const speed = prev.joystick.x ? Math.abs(prev.joystick.x) * horizontalSpeed : horizontalSpeed;
+          newX -= speed;
+        }
+        if (rightInput && newX < 400) { // Allow player to move further right
+          const speed = prev.joystick.x ? Math.abs(prev.joystick.x) * horizontalSpeed * 0.7 : horizontalSpeed * 0.7;
+          newX += speed;
+        }
+        
+        // Camera follows player when they get close to right edge (350+ pixels from left)
+        let newCameraX = prev.cameraX;
+        if (newX > 350) {
+          const targetCameraX = newWorldX - 350; // Keep player at 350px from left edge
+          newCameraX = prev.cameraX + (targetCameraX - prev.cameraX) * 0.15;
+          newX = 350; // Clamp player position to trigger point
+        }
+        
+        // Boundary checking
+        if (newY < 0) {
+          newY = 0;
+          newVelocity = 0;
+        }
+        if (newY > 520) { // Hover above bottom (560 - 40px buffer)
+          newY = 520;
+          newVelocity = 0;
+        }
+        
+        // Update distance based on world position
+        const newDistance = newWorldX;
+        
+        // Check level completion
+        let levelComplete = false;
+        if (newWorldX >= prev.goalX) {
+          levelComplete = true;
+          toast.success("🎉 Level Complete! Amazing flying!");
+        }
+        
+        return {
+          ...prev,
+          velocity: newVelocity,
+          playerY: newY,
+          playerX: newX,
+          worldX: newWorldX,
+          cameraX: newCameraX,
+          forwardSpeed: newForwardSpeed,
+          distance: newDistance,
+          levelComplete
+        };
+      });
       
       animationRef.current = requestAnimationFrame(gameLoop);
     };
@@ -124,76 +246,54 @@ export const Game = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState.gameStarted, gameState.gameOver, gameState.levelComplete, updateGamePhysics, gameState.distance, gameState.goalX]);
+  }, [gameState.gameStarted, gameState.gameOver, gameState.levelComplete]);
 
-  // Enhanced motion blur and visual effects
+  // Motion blur effect based on speed
   const getMotionBlurStyle = () => {
-    const speed = Math.sqrt(gameState.physics.velocity.x ** 2 + gameState.physics.velocity.y ** 2);
-    const speedFactor = Math.min(speed / 15, 1);
+    const speedFactor = Math.min(gameState.forwardSpeed / 15, 1);
     const blurAmount = speedFactor * 3;
     return {
-      filter: `blur(${blurAmount}px) ${gameState.speedLines ? 'brightness(1.1)' : ''}`,
+      filter: `blur(${blurAmount}px)`,
       transition: 'filter 0.3s ease'
     };
   };
 
-  // Get current biome for UI display
-  const currentBiome = getBiomeFromDistance(gameState.distance);
-
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-sky">
-      {/* Enhanced motion blur effect */}
-      <div style={gameState.physics.velocity.x > 8 ? getMotionBlurStyle() : {}}>
-        <SkyBackground 
-          distance={gameState.distance} 
-          forwardSpeed={Math.sqrt(gameState.physics.velocity.x ** 2 + gameState.physics.velocity.y ** 2)} 
-        />
+      <div style={gameState.forwardSpeed > 8 ? getMotionBlurStyle() : {}}>
+        <SkyBackground distance={gameState.distance} forwardSpeed={gameState.forwardSpeed} />
       </div>
-      
-      {/* Speed lines effect */}
-      {gameState.speedLines && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
-        </div>
-      )}
       
       {gameState.gameStarted && !gameState.gameOver && !gameState.levelComplete && (
         <>
           <DoctorCharacter 
-            x={gameState.position.x} 
-            y={gameState.position.y}
-            velocity={gameState.physics.velocity.y}
-            forwardSpeed={Math.sqrt(gameState.physics.velocity.x ** 2 + gameState.physics.velocity.y ** 2)}
+            x={gameState.playerX} 
+            y={gameState.playerY}
+            velocity={gameState.velocity}
+            forwardSpeed={gameState.forwardSpeed}
             keys={gameState.keys}
-            isBarrelRolling={gameState.isBarrelRolling}
-            barrelRollProgress={gameState.barrelRollProgress}
-            physics={gameState.physics}
           />
           
           <LevelGoal 
-            worldX={gameState.worldPosition.x}
+            worldX={gameState.worldX}
             goalX={gameState.goalX}
-            cameraX={gameState.cameraPosition.x}
+            cameraX={gameState.cameraX}
           />
           
-          {/* Enhanced Flight Instruments */}
-          <FlightInstruments 
-            distance={gameState.distance}
-            speed={Math.sqrt(gameState.physics.velocity.x ** 2 + gameState.physics.velocity.y ** 2)}
-            altitude={520 - gameState.position.y}
-            energy={gameState.physics.energy}
-            lift={gameState.physics.lift}
-            drag={gameState.physics.drag}
-            biome={currentBiome.name}
-            flightMode={gameState.controlState.mode}
-            efficiency={gameState.efficiency}
-            smoothness={gameState.smoothness}
-            onFlightModeChange={setFlightMode}
-          />
+          <div className="absolute top-4 left-4 z-20">
+            <div className="bg-card/90 backdrop-blur-sm rounded-lg p-3 border border-border">
+              <p className="text-sm font-semibold text-foreground">
+                Distance: {Math.floor(gameState.distance / 10)}m
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Speed: {gameState.forwardSpeed.toFixed(1)}x
+              </p>
+            </div>
+          </div>
         </>
       )}
       
-      {/* Enhanced Mobile Controls */}
+      {/* Mobile Controls - only show on touch devices */}
       {gameState.gameStarted && !gameState.gameOver && !gameState.levelComplete && (
         <VirtualJoystick 
           onDirectionChange={handleJoystickDirection}
@@ -206,8 +306,8 @@ export const Game = () => {
         gameOver={gameState.gameOver}
         levelComplete={gameState.levelComplete}
         distance={gameState.distance}
-        onStart={handleStartGame}
-        onReset={handleResetGame}
+        onStart={startGame}
+        onReset={resetGame}
       />
     </div>
   );

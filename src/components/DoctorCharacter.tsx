@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { PhysicsState } from '@/lib/physics';
 
 interface DoctorCharacterProps {
   x: number;
@@ -12,21 +11,9 @@ interface DoctorCharacterProps {
     left: boolean;
     right: boolean;
   };
-  isBarrelRolling?: boolean;
-  barrelRollProgress?: number;
-  physics?: PhysicsState;
 }
 
-export const DoctorCharacter = ({ 
-  x, 
-  y, 
-  velocity, 
-  forwardSpeed, 
-  keys, 
-  isBarrelRolling = false, 
-  barrelRollProgress = 0,
-  physics 
-}: DoctorCharacterProps) => {
+export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
   const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
   
@@ -62,67 +49,34 @@ export const DoctorCharacter = ({
     return () => clearInterval(interval);
   }, [keys.up, keys.down, keys.left, keys.right]); // Removed lastMovementState from deps
 
-  // Enhanced rotation with barrel roll support
+  // Determine rotation based on velocity, movement, and wind effect
   const getRotation = () => {
     let rotation = 0;
-    
-    // Barrel roll takes priority
-    if (isBarrelRolling) {
-      return (barrelRollProgress * 360) % 360;
-    }
-    
-    // Normal flight dynamics
     if (velocity < -2) rotation = -15; // Flying up
     else if (velocity > 2) rotation = 15; // Flying down
     
-    if (keys.left) rotation -= 8; // Increased banking
-    if (keys.right) rotation += 8;
+    if (keys.left) rotation -= 5;
+    if (keys.right) rotation += 5;
     
-    // Enhanced wind effect based on physics
-    if (physics && physics.airResistance > 0.5) {
-      rotation += Math.sin(Date.now() * 0.015) * Math.min(physics.airResistance * 2, 5);
-    }
-    
-    // Add stall effect if moving too slow
-    if (forwardSpeed < 3) {
-      rotation += Math.sin(Date.now() * 0.02) * 2; // Unstable at low speed
+    // Add wind effect at max speed
+    if (forwardSpeed >= 5.5) {
+      rotation += Math.sin(Date.now() * 0.01) * 3; // Gentle sway in the wind
     }
     
     return rotation;
   };
 
-  // Enhanced wind and physics effects
+  // Get additional wind effects for the character
   const getWindEffects = () => {
-    const effects: any = {};
-    
-    // High speed effects
-    if (forwardSpeed >= 8) {
-      const windSway = Math.sin(Date.now() * 0.008) * 3;
-      const windScale = 1 + Math.sin(Date.now() * 0.012) * 0.08;
-      effects.transform = `scaleX(${windScale}) translateX(${windSway}px)`;
-      effects.transition = 'none';
+    if (forwardSpeed >= 5.5) {
+      const windSway = Math.sin(Date.now() * 0.008) * 2;
+      const windScale = 1 + Math.sin(Date.now() * 0.012) * 0.05;
+      return {
+        transform: `scaleX(${windScale}) translateX(${windSway}px)`,
+        transition: 'none'
+      };
     }
-    
-    // Physics-based effects
-    if (physics) {
-      // Energy trail effect
-      if (physics.energy < 30) {
-        effects.filter = (effects.filter || '') + ' brightness(0.8)';
-      }
-      
-      // Thrust glow effect
-      if (physics.thrust > 1.5) {
-        effects.filter = (effects.filter || '') + ' drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))';
-      }
-      
-      // Drag visual feedback
-      if (physics.drag > 0.3) {
-        const vibration = Math.sin(Date.now() * 0.05) * 1;
-        effects.transform = (effects.transform || '') + ` translateY(${vibration}px)`;
-      }
-    }
-    
-    return effects;
+    return {};
   };
 
   // Character sprites using the uploaded images (excluding cloud image)
@@ -139,11 +93,11 @@ export const DoctorCharacter = ({
 
   return (
     <div 
-      className={`absolute z-10 transition-transform duration-75 ${isBarrelRolling ? 'animate-spin' : ''}`}
+      className="absolute z-10 transition-transform duration-75"
       style={{
         left: `${x}px`,
         top: `${y}px`,
-        transform: `rotate(${getRotation()}deg) ${isBarrelRolling ? `rotateZ(${barrelRollProgress * 57.2958}deg)` : ''}`,
+        transform: `rotate(${getRotation()}deg)`,
       }}
     >
       <img
@@ -156,20 +110,6 @@ export const DoctorCharacter = ({
           ...getWindEffects()
         }}
       />
-      
-      {/* Physics effect particles */}
-      {physics && physics.thrust > 1.0 && (
-        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-          <div className="w-2 h-6 bg-gradient-to-t from-blue-400 to-transparent opacity-60 animate-pulse" />
-        </div>
-      )}
-      
-      {/* Energy trail */}
-      {physics && physics.energy < 50 && (
-        <div className="absolute top-1/2 -left-8 transform -translate-y-1/2">
-          <div className="w-6 h-1 bg-gradient-to-r from-yellow-400 to-transparent opacity-40" />
-        </div>
-      )}
     </div>
   );
 };

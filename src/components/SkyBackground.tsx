@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import mountainsBg from '@/assets/mountains-bg.jpg';
-import oceanBg from '@/assets/ocean-bg.jpg';
-import forestBg from '@/assets/forest-bg.jpg';
+import pixelForest from '@/assets/pixel-forest.webp';
+import pixelOcean from '@/assets/pixel-ocean.webp';
+import pixelCity from '@/assets/pixel-city.webp';
+import pixelMountains from '@/assets/pixel-mountains.webp';
 
 interface SkyBackgroundProps {
   distance: number;
@@ -70,6 +71,18 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
         ${interpolateColor(currentPhase.middle, nextPhase.middle, transition)}, 
         ${interpolateColor(currentPhase.bottom, nextPhase.bottom, transition)})`
     };
+  };
+
+  const getCurrentBiome = () => {
+    // Change biome every 2500 units of distance
+    const biomeIndex = Math.floor(distance / 2500) % 4;
+    const biomes = [
+      { name: 'forest', bg: pixelForest, opacity: 0.8 },
+      { name: 'ocean', bg: pixelOcean, opacity: 0.7 },
+      { name: 'city', bg: pixelCity, opacity: 0.9 },
+      { name: 'mountains', bg: pixelMountains, opacity: 0.8 }
+    ];
+    return biomes[biomeIndex];
   };
 
   const getCloudOpacity = () => {
@@ -183,42 +196,46 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
       {/* Dynamic sky gradient background */}
       <div className="absolute inset-0" style={getSkyStyles()} />
       
-      {/* Layered background scenery with parallax */}
-      {/* Far mountains - slowest parallax */}
-      <div 
-        className="absolute inset-0 opacity-40"
-        style={{
-          backgroundImage: `url(${mountainsBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
-          backgroundRepeat: 'repeat-x',
-          transform: `translateX(${-(distance * 0.1) % 200}px)`
-        }}
-      />
+      {/* Dynamic pixel art biome backgrounds */}
+      {(() => {
+        const currentBiome = getCurrentBiome();
+        return (
+          <div 
+            className="absolute inset-0 pixel-art"
+            style={{
+              backgroundImage: `url(${currentBiome.bg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center bottom',
+              backgroundRepeat: 'repeat-x',
+              opacity: currentBiome.opacity,
+              transform: `translateX(${-(distance * 0.3) % 100}px)`,
+              imageRendering: 'pixelated',
+              transition: 'opacity 2s ease-in-out'
+            }}
+          />
+        );
+      })()}
       
-      {/* Ocean/water - medium parallax */}
-      <div 
-        className="absolute inset-0 opacity-35"
-        style={{
-          backgroundImage: `url(${oceanBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
-          backgroundRepeat: 'repeat-x',
-          transform: `translateX(${-(distance * 0.15) % 150}px)`
-        }}
-      />
-      
-      {/* Forest/trees - faster parallax */}
-      <div 
-        className="absolute inset-0 opacity-25"
-        style={{
-          backgroundImage: `url(${forestBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
-          backgroundRepeat: 'repeat-x',
-          transform: `translateX(${-(distance * 0.25) % 120}px)`
-        }}
-      />
+      {/* Secondary parallax layer for depth */}
+      {(() => {
+        const currentBiome = getCurrentBiome();
+        return (
+          <div 
+            className="absolute inset-0 pixel-art"
+            style={{
+              backgroundImage: `url(${currentBiome.bg})`,
+              backgroundSize: '150% auto',
+              backgroundPosition: 'center bottom',
+              backgroundRepeat: 'repeat-x',
+              opacity: currentBiome.opacity * 0.4,
+              transform: `translateX(${-(distance * 0.15) % 150}px) scale(1.2)`,
+              imageRendering: 'pixelated',
+              filter: 'blur(1px)',
+              transition: 'opacity 2s ease-in-out'
+            }}
+          />
+        );
+      })()}
       
       {/* Parallax cloud layers */}
       <div className="absolute inset-0">

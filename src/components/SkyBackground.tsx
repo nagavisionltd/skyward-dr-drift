@@ -132,9 +132,9 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
     const baseOpacity = cloud.layer === 1 ? 0.4 : cloud.layer === 2 ? 0.6 : 0.8;
     const opacity = baseOpacity * getCloudOpacity();
     
-    // Motion blur effect based on speed
+    // Motion blur effect based on speed - keep clouds visible
     const speedFactor = Math.min(forwardSpeed / 15, 1);
-    const blurAmount = speedFactor * cloud.speed * 2;
+    const blurAmount = speedFactor * cloud.speed * 0.8; // Reduced blur intensity
     
     return (
       <div
@@ -147,7 +147,7 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
           height: `${cloud.size * 0.6}px`,
           opacity,
           animationDelay: `${cloud.id * 0.2}s`,
-          filter: cloud.layer === 1 ? `blur(${1 + blurAmount}px)` : `blur(${blurAmount}px)`,
+          filter: cloud.layer === 1 ? `blur(${1 + Math.min(blurAmount, 2)}px)` : `blur(${Math.min(blurAmount, 1.5)}px)`,
           transition: 'filter 0.3s ease'
         }}
       >

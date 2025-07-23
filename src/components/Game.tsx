@@ -7,7 +7,10 @@ import { toast } from 'sonner';
 interface GameState {
   playerY: number;
   playerX: number;
+  worldX: number; // Player's position in the world
+  cameraX: number; // Camera offset
   velocity: number;
+  forwardSpeed: number;
   distance: number;
   gameStarted: boolean;
   gameOver: boolean;
@@ -25,7 +28,10 @@ export const Game = () => {
   const [gameState, setGameState] = useState<GameState>({
     playerY: 300,
     playerX: 100,
+    worldX: 100,
+    cameraX: 0,
     velocity: 0,
+    forwardSpeed: 2,
     distance: 0,
     gameStarted: false,
     gameOver: false,
@@ -73,9 +79,12 @@ export const Game = () => {
       distance: 0,
       playerY: 300,
       playerX: 100,
-      velocity: 0
+      worldX: 100,
+      cameraX: 0,
+      velocity: 0,
+      forwardSpeed: 2
     }));
-    toast("Game started! Use WASD or arrow keys to fly!");
+    toast("Game started! Use WASD or arrow keys to fly forward!");
   };
 
   const resetGame = () => {
@@ -86,7 +95,10 @@ export const Game = () => {
       distance: 0,
       playerY: 300,
       playerX: 100,
-      velocity: 0
+      worldX: 100,
+      cameraX: 0,
+      velocity: 0,
+      forwardSpeed: 2
     }));
   };
 
@@ -108,12 +120,26 @@ export const Game = () => {
         let newVelocity = prev.velocity;
         let newY = prev.playerY;
         let newX = prev.playerX;
+        let newWorldX = prev.worldX;
+        let newForwardSpeed = prev.forwardSpeed;
         
         // Apply physics
         const gravity = 0.5;
         const thrust = -1.2;
         const maxVelocity = 8;
-        const horizontalSpeed = 3;
+        const horizontalSpeed = 4;
+        const maxForwardSpeed = 6;
+        const forwardAcceleration = 0.1;
+        
+        // Forward movement - always moving forward, can accelerate
+        if (prev.keys.right) {
+          newForwardSpeed = Math.min(newForwardSpeed + forwardAcceleration, maxForwardSpeed);
+        } else {
+          newForwardSpeed = Math.max(newForwardSpeed - forwardAcceleration * 0.5, 2);
+        }
+        
+        // Update world position
+        newWorldX += newForwardSpeed;
         
         // Vertical movement
         if (prev.keys.up) {
@@ -124,13 +150,17 @@ export const Game = () => {
         
         newY += newVelocity;
         
-        // Horizontal movement
-        if (prev.keys.left && newX > 20) {
+        // Left/right movement relative to screen
+        if (prev.keys.left && newX > 50) {
           newX -= horizontalSpeed;
         }
-        if (prev.keys.right && newX < 200) {
-          newX += horizontalSpeed;
+        if (prev.keys.right && newX < 300) {
+          newX += horizontalSpeed * 0.5; // Slower when also accelerating forward
         }
+        
+        // Camera follows player with smooth offset
+        const targetCameraX = newWorldX - 200; // Keep player slightly left of center
+        const newCameraX = prev.cameraX + (targetCameraX - prev.cameraX) * 0.1;
         
         // Boundary checking
         if (newY < 0) {
@@ -142,14 +172,17 @@ export const Game = () => {
           newVelocity = 0;
         }
         
-        // Update distance (continuous progression)
-        const newDistance = prev.distance + 2;
+        // Update distance based on world position
+        const newDistance = newWorldX;
         
         return {
           ...prev,
           velocity: newVelocity,
           playerY: newY,
           playerX: newX,
+          worldX: newWorldX,
+          cameraX: newCameraX,
+          forwardSpeed: newForwardSpeed,
           distance: newDistance
         };
       });
@@ -173,7 +206,7 @@ export const Game = () => {
       {gameState.gameStarted && !gameState.gameOver && (
         <>
           <DoctorCharacter 
-            x={gameState.playerX} 
+            x={gameState.playerX - gameState.cameraX} 
             y={gameState.playerY}
             velocity={gameState.velocity}
             keys={gameState.keys}
@@ -183,6 +216,9 @@ export const Game = () => {
             <div className="bg-card/90 backdrop-blur-sm rounded-lg p-3 border border-border">
               <p className="text-sm font-semibold text-foreground">
                 Distance: {Math.floor(gameState.distance / 10)}m
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Speed: {gameState.forwardSpeed.toFixed(1)}x
               </p>
             </div>
           </div>

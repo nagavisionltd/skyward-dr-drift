@@ -14,6 +14,29 @@ interface Cloud {
 }
 
 export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
+  // Calculate time of day based on distance
+  const timeProgress = (distance / 1000) % 4; // 4 phases: day, sunset, night, sunrise
+  
+  const getSkyGradient = () => {
+    if (timeProgress < 1) {
+      // Day (0-1)
+      return "bg-gradient-to-b from-sky-400 via-sky-300 to-sky-100";
+    } else if (timeProgress < 2) {
+      // Sunset (1-2)
+      return "bg-gradient-to-b from-orange-500 via-pink-400 to-orange-200";
+    } else if (timeProgress < 3) {
+      // Night (2-3)
+      return "bg-gradient-to-b from-indigo-900 via-purple-900 to-blue-900";
+    } else {
+      // Sunrise (3-4)
+      return "bg-gradient-to-b from-pink-300 via-orange-300 to-yellow-200";
+    }
+  };
+
+  const getCloudOpacity = () => {
+    // Reduce cloud visibility at night
+    return timeProgress >= 2 && timeProgress < 3 ? 0.3 : 0.8;
+  };
   // Generate clouds for parallax effect
   const clouds = useMemo(() => {
     const cloudArray: Cloud[] = [];
@@ -59,7 +82,8 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
 
   const CloudElement = ({ cloud }: { cloud: Cloud }) => {
     const offset = (distance * cloud.speed) % 1600;
-    const opacity = cloud.layer === 1 ? 0.4 : cloud.layer === 2 ? 0.6 : 0.8;
+    const baseOpacity = cloud.layer === 1 ? 0.4 : cloud.layer === 2 ? 0.6 : 0.8;
+    const opacity = baseOpacity * getCloudOpacity();
     
     return (
       <div
@@ -101,8 +125,8 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Sky gradient background */}
-      <div className="absolute inset-0 bg-gradient-sky" />
+      {/* Dynamic sky gradient background */}
+      <div className={`absolute inset-0 ${getSkyGradient()}`} />
       
       {/* Background image */}
       <div 

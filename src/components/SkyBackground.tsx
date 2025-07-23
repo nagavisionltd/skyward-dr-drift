@@ -1,4 +1,7 @@
 import { useMemo } from 'react';
+import mountainsBg from '@/assets/mountains-bg.jpg';
+import oceanBg from '@/assets/ocean-bg.jpg';
+import forestBg from '@/assets/forest-bg.jpg';
 
 interface SkyBackgroundProps {
   distance: number;
@@ -180,14 +183,40 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
       {/* Dynamic sky gradient background */}
       <div className="absolute inset-0" style={getSkyStyles()} />
       
-      {/* Background image */}
+      {/* Layered background scenery with parallax */}
+      {/* Far mountains - slowest parallax */}
       <div 
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-40"
         style={{
-          backgroundImage: 'url("/lovable-uploads/38f5e5c7-aac2-45f8-bcae-642e0c5ca239.png")',
+          backgroundImage: `url(${mountainsBg})`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          transform: `translateX(${-(distance * 0.2) % 100}px)`
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'repeat-x',
+          transform: `translateX(${-(distance * 0.1) % 200}px)`
+        }}
+      />
+      
+      {/* Ocean/water - medium parallax */}
+      <div 
+        className="absolute inset-0 opacity-35"
+        style={{
+          backgroundImage: `url(${oceanBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'repeat-x',
+          transform: `translateX(${-(distance * 0.15) % 150}px)`
+        }}
+      />
+      
+      {/* Forest/trees - faster parallax */}
+      <div 
+        className="absolute inset-0 opacity-25"
+        style={{
+          backgroundImage: `url(${forestBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'repeat-x',
+          transform: `translateX(${-(distance * 0.25) % 120}px)`
         }}
       />
       

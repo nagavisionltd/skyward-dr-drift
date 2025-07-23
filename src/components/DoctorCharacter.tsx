@@ -18,7 +18,7 @@ export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) 
   // Animation cycling
   useEffect(() => {
     const interval = setInterval(() => {
-      setAnimationFrame(prev => (prev + 1) % 5);
+      setAnimationFrame(prev => (prev + 1) % 6);
     }, 200);
     
     return () => clearInterval(interval);
@@ -39,11 +39,12 @@ export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) 
   // Character sprites using the uploaded images
   const getCharacterSprite = () => {
     const sprites = [
-      '/lovable-uploads/c3a3637e-efb0-4a03-9498-43a510244199.png',
-      '/lovable-uploads/77cce5c4-74e2-4f1b-91a5-a82152dc2b3d.png',
+      '/lovable-uploads/38f5e5c7-aac2-45f8-bcae-642e0c5ca239.png',
       '/lovable-uploads/6ccfd2c3-9961-48ae-bdc2-fad6619a6af3.png',
-      '/lovable-uploads/dd3a3a22-d446-4fc2-b490-ccc05800b1d8.png',
+      '/lovable-uploads/77cce5c4-74e2-4f1b-91a5-a82152dc2b3d.png',
+      '/lovable-uploads/c3a3637e-efb0-4a03-9498-43a510244199.png',
       '/lovable-uploads/db63a21f-5a7f-4592-962d-f1cd45943f0f.png',
+      '/lovable-uploads/dd3a3a22-d446-4fc2-b490-ccc05800b1d8.png',
     ];
     return sprites[animationFrame];
   };

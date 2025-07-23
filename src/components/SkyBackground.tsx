@@ -148,45 +148,59 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
     const baseOpacity = cloud.layer === 1 ? 0.4 : cloud.layer === 2 ? 0.6 : 0.8;
     const opacity = baseOpacity * getCloudOpacity();
     
-    // Motion blur effect based on speed - keep clouds visible
-    const speedFactor = Math.min(forwardSpeed / 15, 1);
-    const blurAmount = speedFactor * cloud.speed * 0.8; // Reduced blur intensity
+    // Enhanced motion blur with horizontal streaking
+    const speedFactor = Math.min(forwardSpeed / 10, 1);
+    const blurAmount = speedFactor * cloud.speed * 1.2;
+    const horizontalStreak = speedFactor * 3; // Horizontal streaking effect
+    
+    // Parallax speeds: background slower, foreground faster
+    const parallaxMultiplier = cloud.layer === 1 ? 0.2 : cloud.layer === 2 ? 0.5 : 1.0;
     
     return (
       <div
         key={cloud.id}
         className="absolute rounded-full bg-gradient-cloud animate-float"
         style={{
-          left: `${cloud.x - offset}px`,
+          left: `${cloud.x - (offset * parallaxMultiplier)}px`,
           top: `${cloud.y}px`,
-          width: `${cloud.size}px`,
+          width: `${cloud.size + horizontalStreak}px`, // Horizontal stretching for motion blur
           height: `${cloud.size * 0.6}px`,
           opacity,
           animationDelay: `${cloud.id * 0.2}s`,
-          filter: cloud.layer === 1 ? `blur(${1 + Math.min(blurAmount, 2)}px)` : `blur(${Math.min(blurAmount, 1.5)}px)`,
-          transition: 'filter 0.3s ease'
+          filter: `blur(${cloud.layer === 1 ? 2 + blurAmount : cloud.layer === 2 ? 1 + blurAmount : blurAmount}px)`,
+          transform: `scaleX(${1 + horizontalStreak * 0.1})`, // Additional horizontal stretching
+          transition: 'filter 0.3s ease, transform 0.3s ease'
         }}
       >
-        {/* Cloud details */}
-        <div className="absolute inset-0 rounded-full bg-cloud-white/80" />
+        {/* Cloud details with reduced detail for background layers */}
         <div 
-          className="absolute rounded-full bg-cloud-white"
+          className="absolute inset-0 rounded-full bg-cloud-white/80" 
           style={{
-            width: '60%',
-            height: '70%',
-            left: '10%',
-            top: '15%'
+            filter: cloud.layer === 1 ? 'blur(1px)' : 'none' // Reduced detail for background
           }}
         />
-        <div 
-          className="absolute rounded-full bg-cloud-white"
-          style={{
-            width: '50%',
-            height: '60%',
-            right: '15%',
-            top: '20%'
-          }}
-        />
+        {cloud.layer > 1 && (
+          <>
+            <div 
+              className="absolute rounded-full bg-cloud-white"
+              style={{
+                width: '60%',
+                height: '70%',
+                left: '10%',
+                top: '15%'
+              }}
+            />
+            <div 
+              className="absolute rounded-full bg-cloud-white"
+              style={{
+                width: '50%',
+                height: '60%',
+                right: '15%',
+                top: '20%'
+              }}
+            />
+          </>
+        )}
       </div>
     );
   };

@@ -125,11 +125,11 @@ export const Game = () => {
         
         // Apply physics
         const gravity = 0.01;
-        const thrust = -1.2;
+        const thrust = -0.6; // Reduced from -1.2 for slower rising
         const maxVelocity = 8;
-        const horizontalSpeed = 4;
-        const maxForwardSpeed = 6;
-        const forwardAcceleration = 0.1;
+        const horizontalSpeed = 5; // Increased from 4
+        const maxForwardSpeed = 10; // Increased from 6
+        const forwardAcceleration = 0.15; // Increased acceleration
         
         // Forward movement - always moving forward, can accelerate
         if (prev.keys.right) {
@@ -154,13 +154,17 @@ export const Game = () => {
         if (prev.keys.left && newX > 50) {
           newX -= horizontalSpeed;
         }
-        if (prev.keys.right && newX < 300) {
-          newX += horizontalSpeed * 0.5; // Slower when also accelerating forward
+        if (prev.keys.right && newX < 400) { // Allow player to move further right
+          newX += horizontalSpeed * 0.7; // Slightly slower when also accelerating forward
         }
         
-        // Camera follows player with smooth offset - ensure player stays on screen
-        const targetCameraX = newWorldX - newX; // Keep player at their screen position
-        const newCameraX = prev.cameraX + (targetCameraX - prev.cameraX) * 0.1;
+        // Camera follows player when they get close to right edge (350+ pixels from left)
+        let newCameraX = prev.cameraX;
+        if (newX > 350) {
+          const targetCameraX = newWorldX - 350; // Keep player at 350px from left edge
+          newCameraX = prev.cameraX + (targetCameraX - prev.cameraX) * 0.15;
+          newX = 350; // Clamp player position to trigger point
+        }
         
         // Boundary checking
         if (newY < 0) {

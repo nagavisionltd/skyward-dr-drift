@@ -14,22 +14,39 @@ interface DoctorCharacterProps {
 
 export const DoctorCharacter = ({ x, y, velocity, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
+  const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
   
-  // Animation cycling - only when moving
+  // Animation cycling - maintain last frame until direction changes
   useEffect(() => {
     const isMoving = keys.up || keys.down || keys.left || keys.right;
+    const movementChanged = 
+      keys.up !== lastMovementState.up ||
+      keys.down !== lastMovementState.down ||
+      keys.left !== lastMovementState.left ||
+      keys.right !== lastMovementState.right;
     
     if (!isMoving) {
       setAnimationFrame(0); // Reset to first frame when not moving
+      setLastMovementState({ up: false, down: false, left: false, right: false });
       return;
     }
     
+    // If movement direction changed, restart animation
+    if (movementChanged) {
+      setAnimationFrame(0);
+      setLastMovementState({ ...keys });
+    }
+    
     const interval = setInterval(() => {
-      setAnimationFrame(prev => (prev + 1) % 5);
+      setAnimationFrame(prev => {
+        const nextFrame = prev + 1;
+        // If we reach the last frame (4), stay there
+        return nextFrame >= 5 ? 4 : nextFrame;
+      });
     }, 200);
     
     return () => clearInterval(interval);
-  }, [keys.up, keys.down, keys.left, keys.right]);
+  }, [keys.up, keys.down, keys.left, keys.right, lastMovementState]);
 
   // Determine rotation based on velocity and movement
   const getRotation = () => {

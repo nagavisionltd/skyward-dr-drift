@@ -137,8 +137,8 @@ export const Game = () => {
           newY = 0;
           newVelocity = 0;
         }
-        if (newY > 560) {
-          newY = 560;
+        if (newY > 520) { // Hover above bottom (560 - 40px buffer)
+          newY = 520;
           newVelocity = 0;
         }
         

@@ -45,7 +45,7 @@ export const Game = () => {
     gameStarted: false,
     gameOver: false,
     levelComplete: false,
-    goalX: 5000, // Goal at 5000 units
+    goalX: 10000, // Goal at 10000 units - longer level
     keys: { up: false, down: false, left: false, right: false },
     joystick: { x: 0, y: 0, boost: false }
   });
@@ -261,7 +261,7 @@ export const Game = () => {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-sky">
       <div style={gameState.forwardSpeed > 8 ? getMotionBlurStyle() : {}}>
-        <SkyBackground distance={gameState.distance} />
+        <SkyBackground distance={gameState.distance} forwardSpeed={gameState.forwardSpeed} />
       </div>
       
       {gameState.gameStarted && !gameState.gameOver && !gameState.levelComplete && (

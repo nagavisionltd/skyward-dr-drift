@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 interface SkyBackgroundProps {
   distance: number;
+  forwardSpeed?: number;
 }
 
 interface Cloud {
@@ -13,7 +14,7 @@ interface Cloud {
   layer: number;
 }
 
-export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
+export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps) => {
   // Calculate time of day based on distance with smooth transitions
   const timeProgress = (distance / 1000) % 4; // 4 phases: day, sunset, night, sunrise
   
@@ -83,13 +84,13 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
     }
     return 0.8;
   };
-  // Generate clouds for parallax effect
-  const clouds = useMemo(() => {
-    const cloudArray: Cloud[] = [];
+  // Generate clouds and background objects for parallax effect
+  const backgroundObjects = useMemo(() => {
+    const objectArray: Cloud[] = [];
     
     // Background layer clouds (slower, smaller)
-    for (let i = 0; i < 8; i++) {
-      cloudArray.push({
+    for (let i = 0; i < 12; i++) {
+      objectArray.push({
         id: i,
         x: (i * 300) % 1200,
         y: 50 + Math.random() * 200,
@@ -100,8 +101,8 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
     }
     
     // Middle layer clouds
-    for (let i = 8; i < 16; i++) {
-      cloudArray.push({
+    for (let i = 12; i < 24; i++) {
+      objectArray.push({
         id: i,
         x: (i * 250) % 1200,
         y: 100 + Math.random() * 300,
@@ -112,8 +113,8 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
     }
     
     // Foreground layer clouds (faster, larger)
-    for (let i = 16; i < 24; i++) {
-      cloudArray.push({
+    for (let i = 24; i < 36; i++) {
+      objectArray.push({
         id: i,
         x: (i * 400) % 1600,
         y: 200 + Math.random() * 200,
@@ -123,13 +124,17 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
       });
     }
     
-    return cloudArray;
+    return objectArray;
   }, []);
 
   const CloudElement = ({ cloud }: { cloud: Cloud }) => {
     const offset = (distance * cloud.speed) % 1600;
     const baseOpacity = cloud.layer === 1 ? 0.4 : cloud.layer === 2 ? 0.6 : 0.8;
     const opacity = baseOpacity * getCloudOpacity();
+    
+    // Motion blur effect based on speed
+    const speedFactor = Math.min(forwardSpeed / 15, 1);
+    const blurAmount = speedFactor * cloud.speed * 2;
     
     return (
       <div
@@ -142,7 +147,8 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
           height: `${cloud.size * 0.6}px`,
           opacity,
           animationDelay: `${cloud.id * 0.2}s`,
-          filter: cloud.layer === 1 ? 'blur(1px)' : 'none'
+          filter: cloud.layer === 1 ? `blur(${1 + blurAmount}px)` : `blur(${blurAmount}px)`,
+          transition: 'filter 0.3s ease'
         }}
       >
         {/* Cloud details */}
@@ -187,7 +193,7 @@ export const SkyBackground = ({ distance }: SkyBackgroundProps) => {
       
       {/* Parallax cloud layers */}
       <div className="absolute inset-0">
-        {clouds.map(cloud => (
+        {backgroundObjects.map(cloud => (
           <CloudElement key={cloud.id} cloud={cloud} />
         ))}
       </div>

@@ -23,8 +23,8 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
   const timeProgress = (distance / 1000) % 4; // 4 phases: day, sunset, night, sunrise
   
   const getSkyStyles = () => {
-    const phase = Math.floor(timeProgress);
-    const transition = timeProgress - phase;
+    const phase = Math.floor(timeProgress) % 4; // Ensure phase is always 0-3
+    const transition = timeProgress - Math.floor(timeProgress);
     
     // Define sky colors for each phase
     const skyPhases = {
@@ -52,6 +52,16 @@ export const SkyBackground = ({ distance, forwardSpeed = 2 }: SkyBackgroundProps
     
     const currentPhase = skyPhases[phase as keyof typeof skyPhases];
     const nextPhase = skyPhases[((phase + 1) % 4) as keyof typeof skyPhases];
+    
+    // Safety check to ensure phases exist
+    if (!currentPhase || !nextPhase) {
+      return {
+        background: `linear-gradient(to bottom, 
+          rgb(135, 206, 250), 
+          rgb(147, 197, 253), 
+          rgb(224, 242, 254))`
+      };
+    }
     
     // Interpolate between current and next phase
     const interpolateColor = (color1: string, color2: string, factor: number) => {

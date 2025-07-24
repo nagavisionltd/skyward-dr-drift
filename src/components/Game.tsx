@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useState } from 'react';
 import { DoctorCharacter } from './DoctorCharacter';
+import { SpaceBackground } from './SpaceBackground';
 
 interface GameState {
   position: { x: number; y: number };
@@ -98,6 +99,7 @@ export const Game = () => {
           transform: `translateX(-${Math.max(0, gameState.position.x - window.innerWidth / 2)}px)`
         }}
       >
+        <SpaceBackground width={5000} height={window.innerHeight} />
         <DoctorCharacter 
           x={gameState.position.x} 
           y={gameState.position.y}

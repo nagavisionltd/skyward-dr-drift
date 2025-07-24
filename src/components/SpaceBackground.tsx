@@ -73,16 +73,14 @@ export const SpaceBackground = ({ width, height }: SpaceBackgroundProps) => {
       {stars.map((star) => (
         <div
           key={`star-${star.id}`}
-          className="absolute rounded-full bg-white animate-pulse"
+          className="absolute rounded-full bg-white"
           style={{
             left: `${star.x}px`,
             top: `${star.y}px`,
             width: `${star.size}px`,
             height: `${star.size}px`,
             opacity: star.opacity,
-            animationDelay: `${star.twinkleDelay}s`,
-            animationDuration: `${2 + Math.random() * 2}s`,
-            boxShadow: `0 0 ${star.size * 2}px rgba(255,255,255,${star.opacity * 0.5})`
+            boxShadow: `0 0 ${star.size}px rgba(255,255,255,${star.opacity * 0.3})`
           }}
         />
       ))}

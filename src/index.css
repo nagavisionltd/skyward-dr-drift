@@ -127,3 +127,13 @@ All colors MUST be HSL.
     image-rendering: crisp-edges;
   }
 }
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(-10px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

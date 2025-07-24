@@ -18,7 +18,7 @@ interface DoctorCharacterProps {
 export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, stalled = false, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
   const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
-  
+  const isHighSpeed = forwardSpeed > 3;
   // Animation cycling - maintain last frame until direction changes
   useEffect(() => {
     const isMoving = keys.up || keys.down || keys.left || keys.right;
@@ -114,6 +114,68 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
         transform: `rotate(${getRotation()}deg)`,
       }}
     >
+      {/* Energy Aura for High Speed */}
+      {isHighSpeed && (
+        <>
+          {/* Main Energy Aura */}
+          <div 
+            className="absolute inset-0 rounded-full animate-pulse"
+            style={{
+              width: '80px',
+              height: '80px',
+              left: '-20px',
+              top: '-15px',
+              background: 'radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,140,0,0.2) 50%, transparent 70%)',
+              animation: 'pulse 0.5s ease-in-out infinite alternate'
+            }}
+          />
+          
+          {/* Secondary Energy Ring */}
+          <div 
+            className="absolute inset-0 rounded-full"
+            style={{
+              width: '100px',
+              height: '100px',
+              left: '-30px',
+              top: '-25px',
+              background: 'radial-gradient(circle, transparent 60%, rgba(255,215,0,0.1) 70%, transparent 80%)',
+              animation: 'spin 1s linear infinite'
+            }}
+          />
+          
+          {/* Energy Sparks */}
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-yellow-300 rounded-full"
+              style={{
+                left: `${20 + Math.cos(Date.now() * 0.01 + i) * 40}px`,
+                top: `${25 + Math.sin(Date.now() * 0.01 + i) * 40}px`,
+                animation: `pulse 0.3s ease-in-out infinite`,
+                animationDelay: `${i * 0.1}s`
+              }}
+            />
+          ))}
+        </>
+      )}
+      
+      {/* Wind Effect Lines */}
+      {keys.right && (
+        <>
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-8 h-0.5 bg-blue-300 opacity-60"
+              style={{
+                left: `${-20 - i * 8}px`,
+                top: `${20 + i * 4}px`,
+                animation: `fadeInOut 0.5s ease-in-out infinite`,
+                animationDelay: `${i * 0.1}s`
+              }}
+            />
+          ))}
+        </>
+      )}
       <img
         src={getCharacterSprite()}
         alt="Flying Doctor"

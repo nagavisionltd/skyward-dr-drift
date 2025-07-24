@@ -81,7 +81,8 @@ export const SpaceBackground = ({ width, height }: SpaceBackgroundProps) => {
             height: `${star.size}px`,
             opacity: star.opacity,
             animationDelay: `${star.twinkleDelay}s`,
-            animationDuration: '2s'
+            animationDuration: `${2 + Math.random() * 2}s`,
+            boxShadow: `0 0 ${star.size * 2}px rgba(255,255,255,${star.opacity * 0.5})`
           }}
         />
       ))}

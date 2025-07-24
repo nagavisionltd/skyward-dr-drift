@@ -73,8 +73,8 @@ export const Game = () => {
         if (prev.keys.left) newX -= speed;
         if (prev.keys.right) newX += speed;
         
-        // Keep character within the large canvas area (5000px wide)
-        newX = Math.max(25, Math.min(5000 - 75, newX));
+        // Keep character within the large canvas area (10000px wide)
+        newX = Math.max(25, Math.min(10000 - 75, newX));
         newY = Math.max(25, Math.min(window.innerHeight - 75, newY));
         
         return {
@@ -94,12 +94,12 @@ export const Game = () => {
       <div 
         className="relative bg-black"
         style={{ 
-          width: '5000px', 
+          width: '10000px', 
           height: '100vh',
           transform: `translateX(-${Math.max(0, gameState.position.x - window.innerWidth / 2)}px)`
         }}
       >
-        <SpaceBackground width={5000} height={window.innerHeight} />
+        <SpaceBackground width={10000} height={window.innerHeight} />
         <DoctorCharacter 
           x={gameState.position.x} 
           y={gameState.position.y}

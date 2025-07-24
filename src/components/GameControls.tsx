@@ -5,18 +5,16 @@ interface GameControlsProps {
   gameStarted: boolean;
   gameOver: boolean;
   levelComplete: boolean;
-  distance: number;
-  onStart: () => void;
-  onReset: () => void;
+  onStartGame: () => void;
+  onResetGame: () => void;
 }
 
 export const GameControls = ({ 
   gameStarted, 
   gameOver, 
   levelComplete,
-  distance, 
-  onStart, 
-  onReset 
+  onStartGame, 
+  onResetGame 
 }: GameControlsProps) => {
   if (gameStarted && !gameOver && !levelComplete) {
     return (
@@ -44,11 +42,11 @@ export const GameControls = ({
           </CardTitle>
           <CardDescription className="text-lg">
             {levelComplete 
-              ? `Congratulations! You reached the goal in ${Math.floor(distance / 10)}m!`
+              ? "Congratulations! You reached the goal!"
               : !gameStarted 
-                ? "Help the doctor fly through the endless sky!" 
+                ? "Collect medical supplies and avoid obstacles!" 
                 : gameOver 
-                  ? `Flight completed! You traveled ${Math.floor(distance / 10)}m`
+                  ? "Game Over! You ran out of lives."
                   : ""
             }
           </CardDescription>
@@ -65,7 +63,7 @@ export const GameControls = ({
                 </p>
               </div>
               <Button 
-                onClick={onReset}
+                onClick={onResetGame}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 size="lg"
               >
@@ -75,11 +73,12 @@ export const GameControls = ({
           ) : !gameStarted ? (
             <>
               <div className="text-center space-y-2 text-sm text-muted-foreground">
-                <p>Use WASD/arrow keys or touch controls to fly</p>
-                <p>Reach the goal flag to complete the level!</p>
+                <p>🩹 Collect medical supplies for points</p>
+                <p>🪨 Avoid obstacles or lose lives</p>
+                <p>🏁 Reach the goal to complete the level</p>
               </div>
               <Button 
-                onClick={onStart}
+                onClick={onStartGame}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 size="lg"
               >
@@ -90,25 +89,25 @@ export const GameControls = ({
             <>
               <div className="text-center">
                 <p className="text-lg font-semibold text-foreground">
-                  Great flight, Doctor!
+                  Game Over!
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Distance: {Math.floor(distance / 10)} meters
+                  The doctor ran out of lives
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button 
-                  onClick={onReset}
+                  onClick={onResetGame}
                   variant="outline"
                   className="flex-1"
                 >
                   Menu
                 </Button>
                 <Button 
-                  onClick={onStart}
+                  onClick={onStartGame}
                   className="flex-1 bg-primary hover:bg-primary/90"
                 >
-                  Fly Again
+                  Try Again
                 </Button>
               </div>
             </>

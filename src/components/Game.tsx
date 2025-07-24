@@ -63,7 +63,7 @@ export const Game = () => {
   useEffect(() => {
     const gameLoop = () => {
       setGameState(prev => {
-        const speed = 3;
+        const speed = 5;
         let newX = prev.position.x;
         let newY = prev.position.y;
         
@@ -73,8 +73,8 @@ export const Game = () => {
         if (prev.keys.right) newX += speed;
         
         // Keep character on screen
-        newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
-        newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
+        newX = Math.max(25, Math.min(window.innerWidth - 75, newX));
+        newY = Math.max(25, Math.min(window.innerHeight - 75, newY));
         
         return {
           ...prev,
@@ -94,7 +94,9 @@ export const Game = () => {
         x={gameState.position.x} 
         y={gameState.position.y}
         velocity={0}
-        forwardSpeed={0}
+        forwardSpeed={5}
+        rotation={0}
+        stalled={false}
         keys={gameState.keys}
       />
     </div>

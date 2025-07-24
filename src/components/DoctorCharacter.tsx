@@ -19,14 +19,11 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
   const [animationFrame, setAnimationFrame] = useState(0);
   const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
   const isHighSpeed = animationFrame === 5 && keys.right;
-  // Animation cycling - maintain last frame until direction changes
+  // Animation cycling - maintain frame 5 when right is held, even with up/down movement
   useEffect(() => {
     const isMoving = keys.up || keys.down || keys.left || keys.right;
-    const movementChanged = 
-      keys.up !== lastMovementState.up ||
-      keys.down !== lastMovementState.down ||
-      keys.left !== lastMovementState.left ||
-      keys.right !== lastMovementState.right;
+    const rightKeyChanged = keys.right !== lastMovementState.right;
+    const horizontalMovementChanged = keys.left !== lastMovementState.left || keys.right !== lastMovementState.right;
     
     if (!isMoving) {
       setAnimationFrame(0); // Reset to first frame when not moving
@@ -34,10 +31,18 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
       return;
     }
     
-    // If movement direction changed, restart animation
-    if (movementChanged) {
+    // Only restart animation if horizontal movement changed or right key was released
+    if (horizontalMovementChanged || (!keys.right && rightKeyChanged)) {
       setAnimationFrame(0);
       setLastMovementState({ ...keys });
+    } else {
+      // Update last movement state for up/down without resetting animation
+      setLastMovementState({ ...keys });
+    }
+    
+    // Don't start animation interval if we're at frame 5 and right is held
+    if (animationFrame === 5 && keys.right) {
+      return;
     }
     
     const interval = setInterval(() => {
@@ -49,7 +54,7 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
     }, 200);
     
     return () => clearInterval(interval);
-  }, [keys.up, keys.down, keys.left, keys.right]);
+  }, [keys.up, keys.down, keys.left, keys.right, animationFrame]);
 
   // Use physics rotation with additional effects
   const getRotation = () => {

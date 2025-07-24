@@ -72,8 +72,8 @@ export const Game = () => {
         if (prev.keys.left) newX -= speed;
         if (prev.keys.right) newX += speed;
         
-        // Keep character on screen
-        newX = Math.max(25, Math.min(window.innerWidth - 75, newX));
+        // Keep character within the large canvas area (5000px wide)
+        newX = Math.max(25, Math.min(5000 - 75, newX));
         newY = Math.max(25, Math.min(window.innerHeight - 75, newY));
         
         return {
@@ -90,15 +90,24 @@ export const Game = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
-      <DoctorCharacter 
-        x={gameState.position.x} 
-        y={gameState.position.y}
-        velocity={0}
-        forwardSpeed={5}
-        rotation={0}
-        stalled={false}
-        keys={gameState.keys}
-      />
+      <div 
+        className="relative bg-black"
+        style={{ 
+          width: '5000px', 
+          height: '100vh',
+          transform: `translateX(-${Math.max(0, gameState.position.x - window.innerWidth / 2)}px)`
+        }}
+      >
+        <DoctorCharacter 
+          x={gameState.position.x} 
+          y={gameState.position.y}
+          velocity={0}
+          forwardSpeed={5}
+          rotation={0}
+          stalled={false}
+          keys={gameState.keys}
+        />
+      </div>
     </div>
   );
 };

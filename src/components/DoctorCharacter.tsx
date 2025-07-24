@@ -42,10 +42,11 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
     
     const interval = setInterval(() => {
       setAnimationFrame(prev => {
-        // Smooth cycling through all 6 frames (0-5)
-        return (prev + 1) % 6;
+        const nextFrame = prev + 1;
+        // If we reach the last frame (5), stay there
+        return nextFrame >= 6 ? 5 : nextFrame;
       });
-    }, 150);
+    }, 200);
     
     return () => clearInterval(interval);
   }, [keys.up, keys.down, keys.left, keys.right]);

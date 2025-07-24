@@ -43,8 +43,8 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
     const interval = setInterval(() => {
       setAnimationFrame(prev => {
         const nextFrame = prev + 1;
-        // If we reach the last frame (4), stay there
-        return nextFrame >= 5 ? 4 : nextFrame;
+        // If we reach the last frame (5), stay there
+        return nextFrame >= 6 ? 5 : nextFrame;
       });
     }, 200);
     
@@ -100,6 +100,7 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
       '/lovable-uploads/c3a3637e-efb0-4a03-9498-43a510244199.png',
       '/lovable-uploads/db63a21f-5a7f-4592-962d-f1cd45943f0f.png',
       '/lovable-uploads/dd3a3a22-d446-4fc2-b490-ccc05800b1d8.png',
+      '/lovable-uploads/720cec1c-7fa2-4421-96c5-279b81204b32.png',
     ];
     return sprites[animationFrame];
   };

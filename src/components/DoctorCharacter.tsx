@@ -18,7 +18,7 @@ interface DoctorCharacterProps {
 export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, stalled = false, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
   const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
-  const isHighSpeed = forwardSpeed > 3;
+  const isHighSpeed = animationFrame === 5 && keys.right;
   // Animation cycling - maintain last frame until direction changes
   useEffect(() => {
     const isMoving = keys.up || keys.down || keys.left || keys.right;

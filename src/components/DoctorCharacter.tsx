@@ -7,6 +7,9 @@ interface DoctorCharacterProps {
   forwardSpeed: number;
   rotation?: number;
   stalled?: boolean;
+  invulnerable?: boolean;
+  shieldActive?: boolean;
+  boostActive?: boolean;
   keys: {
     up: boolean;
     down: boolean;
@@ -15,7 +18,7 @@ interface DoctorCharacterProps {
   };
 }
 
-export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, stalled = false, keys }: DoctorCharacterProps) => {
+export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, stalled = false, invulnerable = false, shieldActive = false, boostActive = false, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
   const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
   const isHighSpeed = animationFrame === 5 && keys.right;
@@ -181,17 +184,57 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
           ))}
         </>
       )}
+      {/* Shield Effect */}
+      {shieldActive && (
+        <div 
+          className="absolute inset-0 -m-4 rounded-full border-4 border-blue-400 animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, rgba(79,195,247,0.2), transparent)',
+            boxShadow: '0 0 20px rgba(79,195,247,0.6)',
+            zIndex: -1
+          }}
+        />
+      )}
+
+      {/* Boost Effect */}
+      {boostActive && (
+        <div className="absolute inset-0 -m-2">
+          <div className="w-full h-full rounded-full animate-ping bg-orange-400 opacity-30" />
+          <div className="absolute inset-0 w-full h-full rounded-full bg-gradient-to-r from-orange-400 to-yellow-400 opacity-20 animate-pulse" />
+        </div>
+      )}
+
+      {/* Invulnerability Effect */}
+      {invulnerable && (
+        <div 
+          className="absolute inset-0 rounded-full animate-pulse"
+          style={{
+            background: 'radial-gradient(circle, rgba(255,255,255,0.3), transparent)',
+            animation: 'flash 0.2s ease-in-out infinite alternate'
+          }}
+        />
+      )}
+
       <img
         src={getCharacterSprite()}
         alt="Flying Doctor"
-        className={`w-12 h-16 pixelated drop-shadow-lg ${stalled ? 'animate-bounce' : ''}`}
+        className={`w-12 h-16 pixelated drop-shadow-lg ${stalled ? 'animate-bounce' : ''} ${invulnerable ? 'animate-pulse' : ''}`}
         style={{
           imageRendering: 'pixelated',
-          filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
+          filter: `drop-shadow(2px 2px 4px rgba(0,0,0,0.3)) ${
+            invulnerable ? 'brightness(1.5) hue-rotate(180deg)' : ''
+          } ${boostActive ? 'drop-shadow(0 0 10px #FF6B35)' : ''}`,
           transform: keys.left ? 'scaleX(-1)' : 'scaleX(1)',
           ...getCharacterEffects()
         }}
       />
+      
+      <style>{`
+        @keyframes flash {
+          0% { opacity: 0.3; }
+          100% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

@@ -137,3 +137,58 @@ All colors MUST be HSL.
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Game-specific animations */
+@keyframes psychedelicShift {
+  0%, 100% { filter: hue-rotate(0deg) saturate(1.2); }
+  25% { filter: hue-rotate(90deg) saturate(1.5); }
+  50% { filter: hue-rotate(180deg) saturate(1.8); }
+  75% { filter: hue-rotate(270deg) saturate(1.3); }
+}
+
+@keyframes nebulaFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -30px) scale(1.1); }
+  66% { transform: translate(-30px, 20px) scale(0.9); }
+}
+
+@keyframes cosmicSwirl {
+  0% { transform: scale(2) rotate(0deg); }
+  100% { transform: scale(2) rotate(360deg); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.5); }
+}
+
+@keyframes auroraWave {
+  0%, 100% { transform: translateY(0px) scaleY(1); }
+  50% { transform: translateY(-20px) scaleY(1.2); }
+}
+
+@keyframes titleGlow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8));
+    transform: scale(1);
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px rgba(59, 130, 246, 1));
+    transform: scale(1.02);
+  }
+}
+
+@keyframes buttonPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+}
+
+@keyframes speedTrail {
+  0% { opacity: 0.6; transform: scaleX(1); }
+  100% { opacity: 0.2; transform: scaleX(0.7); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}

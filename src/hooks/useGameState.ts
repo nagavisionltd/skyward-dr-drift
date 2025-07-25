@@ -1,83 +1,54 @@
 import { useState, useCallback } from 'react';
 
-export interface CollectibleData {
+export interface GlowingOrbData {
   id: string;
   x: number;
   y: number;
-  type: 'bandage' | 'pill' | 'syringe';
+  color: string;
+  points: number;
   collected: boolean;
-}
-
-export interface ObstacleData {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  type: 'rock' | 'tree' | 'building';
 }
 
 export interface GameStateData {
   score: number;
   lives: number;
   distance: number;
-  collectibles: CollectibleData[];
-  obstacles: ObstacleData[];
+  orbs: GlowingOrbData[];
   gameOver: boolean;
   levelComplete: boolean;
 }
 
-const generateCollectibles = (): CollectibleData[] => {
-  const collectibles: CollectibleData[] = [];
-  const types: ('bandage' | 'pill' | 'syringe')[] = ['bandage', 'pill', 'syringe'];
+const generateOrbs = (): GlowingOrbData[] => {
+  const orbs: GlowingOrbData[] = [];
+  const colors = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#FF6B6B', '#4ECDC4'];
+  const rarityWeights = [40, 30, 20, 15, 10, 8, 5, 3]; // Common to legendary
+  const pointValues = [10, 15, 25, 35, 50, 75, 100, 150];
   
-  for (let i = 0; i < 50; i++) {
-    collectibles.push({
-      id: `collectible-${i}`,
-      x: Math.random() * 9500 + 250, // Spread across the world
+  for (let i = 0; i < 40; i++) {
+    // Weighted random color selection
+    const rand = Math.random() * 100;
+    let colorIndex = 0;
+    let accumulator = 0;
+    
+    for (let j = 0; j < rarityWeights.length; j++) {
+      accumulator += rarityWeights[j];
+      if (rand <= accumulator) {
+        colorIndex = j;
+        break;
+      }
+    }
+    
+    orbs.push({
+      id: `orb-${i}`,
+      x: Math.random() * 9000 + 500,
       y: Math.random() * (window.innerHeight - 200) + 100,
-      type: types[Math.floor(Math.random() * types.length)],
+      color: colors[colorIndex],
+      points: pointValues[colorIndex],
       collected: false,
     });
   }
   
-  return collectibles;
-};
-
-const generateObstacles = (): ObstacleData[] => {
-  const obstacles: ObstacleData[] = [];
-  const types: ('rock' | 'tree' | 'building')[] = ['rock', 'tree', 'building'];
-  
-  for (let i = 0; i < 30; i++) {
-    const type = types[Math.floor(Math.random() * types.length)];
-    let width, height;
-    
-    switch (type) {
-      case 'rock':
-        width = 40 + Math.random() * 30;
-        height = 40 + Math.random() * 30;
-        break;
-      case 'tree':
-        width = 30 + Math.random() * 20;
-        height = 60 + Math.random() * 40;
-        break;
-      case 'building':
-        width = 50 + Math.random() * 50;
-        height = 80 + Math.random() * 60;
-        break;
-    }
-    
-    obstacles.push({
-      id: `obstacle-${i}`,
-      x: Math.random() * 9000 + 500,
-      y: Math.random() * (window.innerHeight - height - 100) + 50,
-      width,
-      height,
-      type,
-    });
-  }
-  
-  return obstacles;
+  return orbs;
 };
 
 export const useGameState = () => {
@@ -85,52 +56,30 @@ export const useGameState = () => {
     score: 0,
     lives: 3,
     distance: 0,
-    collectibles: generateCollectibles(),
-    obstacles: generateObstacles(),
+    orbs: generateOrbs(),
     gameOver: false,
     levelComplete: false,
   });
 
-  const collectItem = useCallback((collectibleId: string) => {
+  const collectOrb = useCallback((orbId: string) => {
     setGameState(prev => {
-      const collectible = prev.collectibles.find(c => c.id === collectibleId);
-      if (!collectible || collectible.collected) return prev;
-
-      const points = collectible.type === 'bandage' ? 10 : 
-                    collectible.type === 'pill' ? 25 : 50;
+      const orb = prev.orbs.find(o => o.id === orbId);
+      if (!orb || orb.collected) return prev;
 
       return {
         ...prev,
-        score: prev.score + points,
-        collectibles: prev.collectibles.map(c =>
-          c.id === collectibleId ? { ...c, collected: true } : c
+        score: prev.score + orb.points,
+        orbs: prev.orbs.map(o =>
+          o.id === orbId ? { ...o, collected: true } : o
         ),
       };
     });
   }, []);
 
   const checkCollisions = useCallback((playerX: number, playerY: number) => {
-    setGameState(prev => {
-      // Check obstacle collisions
-      const playerSize = 50; // Approximate player size
-      const hitObstacle = prev.obstacles.some(obstacle => 
-        playerX + playerSize > obstacle.x &&
-        playerX < obstacle.x + obstacle.width &&
-        playerY + playerSize > obstacle.y &&
-        playerY < obstacle.y + obstacle.height
-      );
-
-      if (hitObstacle && prev.lives > 0) {
-        const newLives = prev.lives - 1;
-        return {
-          ...prev,
-          lives: newLives,
-          gameOver: newLives === 0,
-        };
-      }
-
-      return prev;
-    });
+    // Collision logic is now handled in GlowingOrb component
+    // This function kept for future obstacle implementation
+    return;
   }, []);
 
   const updateDistance = useCallback((playerX: number) => {
@@ -146,8 +95,7 @@ export const useGameState = () => {
       score: 0,
       lives: 3,
       distance: 0,
-      collectibles: generateCollectibles(),
-      obstacles: generateObstacles(),
+      orbs: generateOrbs(),
       gameOver: false,
       levelComplete: false,
     });
@@ -155,7 +103,7 @@ export const useGameState = () => {
 
   return {
     gameState,
-    collectItem,
+    collectOrb,
     checkCollisions,
     updateDistance,
     resetGame,

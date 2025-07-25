@@ -1,15 +1,18 @@
 import { useEffect, useCallback, useState } from 'react';
 import { DoctorCharacter } from './DoctorCharacter';
 import { SpaceBackground } from './SpaceBackground';
-import { Collectible } from './Collectible';
-import { Obstacle } from './Obstacle';
+import { GlowingOrb } from './GlowingOrb';
 import { GameHUD } from './GameHUD';
 import { GameControls } from './GameControls';
 import { LevelGoal } from './LevelGoal';
+import { StartScreen } from './StartScreen';
+import { VirtualJoystick } from './VirtualJoystick';
 import { useGameState } from '../hooks/useGameState';
+import { useIsMobile } from '../hooks/use-mobile';
 
 interface GameState {
   position: { x: number; y: number };
+  velocity: { x: number; y: number };
   keys: {
     up: boolean;
     down: boolean;
@@ -21,11 +24,14 @@ interface GameState {
 export const Game = () => {
   const [playerState, setPlayerState] = useState<GameState>({
     position: { x: 200, y: 300 },
+    velocity: { x: 0, y: 0 },
     keys: { up: false, down: false, left: false, right: false }
   });
   
-  const { gameState, collectItem, checkCollisions, updateDistance, resetGame } = useGameState();
+  const { gameState, collectOrb, checkCollisions, updateDistance, resetGame } = useGameState();
   const [gameStarted, setGameStarted] = useState(false);
+  const [isBoosting, setIsBoosting] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const key = e.key.toLowerCase();
@@ -70,21 +76,59 @@ export const Game = () => {
     };
   }, [handleKeyDown, handleKeyUp]);
 
+  // Mobile controls handlers
+  const handleDirectionChange = useCallback((direction: { x: number; y: number }) => {
+    setPlayerState(prev => ({
+      ...prev,
+      keys: {
+        up: direction.y > 0.3,
+        down: direction.y < -0.3,
+        left: direction.x < -0.3,
+        right: direction.x > 0.3,
+      }
+    }));
+  }, []);
+
+  const handleBoost = useCallback((boosting: boolean) => {
+    setIsBoosting(boosting);
+  }, []);
+
   useEffect(() => {
     if (!gameStarted || gameState.gameOver) return;
 
     const gameLoop = () => {
       setPlayerState(prev => {
-        const speed = 5;
-        let newX = prev.position.x;
-        let newY = prev.position.y;
+        // Physics constants
+        const acceleration = 0.3;
+        const deceleration = 0.85;
+        const maxSpeed = 6;
+        const boostMultiplier = isBoosting ? 1.8 : 1;
         
-        if (prev.keys.up) newY -= speed;
-        if (prev.keys.down) newY += speed;
-        if (prev.keys.left) newX -= speed;
-        if (prev.keys.right) newX += speed;
+        let newVelocity = { ...prev.velocity };
         
-        // Keep character within the large canvas area (10000px wide)
+        // Apply acceleration based on input
+        if (prev.keys.up) newVelocity.y -= acceleration;
+        if (prev.keys.down) newVelocity.y += acceleration;
+        if (prev.keys.left) newVelocity.x -= acceleration;
+        if (prev.keys.right) newVelocity.x += acceleration * boostMultiplier;
+        
+        // Apply deceleration
+        newVelocity.x *= deceleration;
+        newVelocity.y *= deceleration;
+        
+        // Limit speed
+        const speed = Math.sqrt(newVelocity.x ** 2 + newVelocity.y ** 2);
+        if (speed > maxSpeed * boostMultiplier) {
+          const ratio = (maxSpeed * boostMultiplier) / speed;
+          newVelocity.x *= ratio;
+          newVelocity.y *= ratio;
+        }
+        
+        // Update position
+        let newX = prev.position.x + newVelocity.x;
+        let newY = prev.position.y + newVelocity.y;
+        
+        // Boundaries
         newX = Math.max(25, Math.min(10000 - 75, newX));
         newY = Math.max(25, Math.min(window.innerHeight - 75, newY));
         
@@ -94,7 +138,8 @@ export const Game = () => {
         
         return {
           ...prev,
-          position: { x: newX, y: newY }
+          position: { x: newX, y: newY },
+          velocity: newVelocity
         };
       });
       
@@ -104,7 +149,7 @@ export const Game = () => {
     };
     
     gameLoop();
-  }, [gameStarted, gameState.gameOver, updateDistance, checkCollisions]);
+  }, [gameStarted, gameState.gameOver, updateDistance, checkCollisions, isBoosting]);
 
   const cameraX = Math.max(0, playerState.position.x - window.innerWidth / 2);
 
@@ -117,10 +162,16 @@ export const Game = () => {
     setGameStarted(false);
     setPlayerState({
       position: { x: 200, y: 300 },
+      velocity: { x: 0, y: 0 },
       keys: { up: false, down: false, left: false, right: false }
     });
     resetGame();
   };
+
+  // Show start screen if game hasn't started
+  if (!gameStarted) {
+    return <StartScreen onStartGame={handleStartGame} />;
+  }
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
@@ -134,60 +185,51 @@ export const Game = () => {
       >
         <SpaceBackground width={10000} height={window.innerHeight} />
         
-        {/* Collectibles */}
-        {gameState.collectibles.map(collectible => (
-          <Collectible
-            key={collectible.id}
-            x={collectible.x}
-            y={collectible.y}
-            type={collectible.type}
-            collected={collectible.collected}
-            onCollect={() => collectItem(collectible.id)}
-            cameraX={cameraX}
-          />
-        ))}
-        
-        {/* Obstacles */}
-        {gameState.obstacles.map(obstacle => (
-          <Obstacle
-            key={obstacle.id}
-            x={obstacle.x}
-            y={obstacle.y}
-            width={obstacle.width}
-            height={obstacle.height}
-            type={obstacle.type}
+        {/* Glowing Orbs */}
+        {gameState.orbs.map(orb => (
+          <GlowingOrb
+            key={orb.id}
+            x={orb.x}
+            y={orb.y}
+            color={orb.color}
+            points={orb.points}
+            collected={orb.collected}
+            onCollect={() => collectOrb(orb.id)}
             cameraX={cameraX}
           />
         ))}
         
         {/* Level Goal */}
-        {gameStarted && (
-          <LevelGoal
-            worldX={playerState.position.x}
-            goalX={9500}
-            cameraX={cameraX}
-          />
-        )}
+        <LevelGoal
+          worldX={playerState.position.x}
+          goalX={9500}
+          cameraX={cameraX}
+        />
         
-        {gameStarted && (
-          <DoctorCharacter 
-            x={playerState.position.x} 
-            y={playerState.position.y}
-            velocity={0}
-            forwardSpeed={5}
-            rotation={0}
-            stalled={false}
-            keys={playerState.keys}
-          />
-        )}
+        <DoctorCharacter 
+          data-player="true"
+          x={playerState.position.x} 
+          y={playerState.position.y}
+          velocity={Math.sqrt(playerState.velocity.x ** 2 + playerState.velocity.y ** 2)}
+          forwardSpeed={Math.sqrt(playerState.velocity.x ** 2 + playerState.velocity.y ** 2)}
+          rotation={playerState.velocity.x > 0 ? 5 : playerState.velocity.x < 0 ? -5 : 0}
+          stalled={false}
+          keys={playerState.keys}
+        />
       </div>
       
       {/* Game HUD */}
-      {gameStarted && (
-        <GameHUD 
-          score={gameState.score}
-          lives={gameState.lives}
-          distance={gameState.distance}
+      <GameHUD 
+        score={gameState.score}
+        lives={gameState.lives}
+        distance={gameState.distance}
+      />
+      
+      {/* Mobile Controls */}
+      {isMobile && (
+        <VirtualJoystick
+          onDirectionChange={handleDirectionChange}
+          onBoost={handleBoost}
         />
       )}
       

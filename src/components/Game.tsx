@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { DoctorCharacter } from './DoctorCharacter';
 import { SpaceBackground } from './SpaceBackground';
 import { UpdraftZone } from './UpdraftZone';
+import { VirtualJoystick } from './VirtualJoystick';
 
 interface GameState {
   position: { x: number; y: number };
@@ -62,6 +63,19 @@ export const Game = () => {
     if (['arrowright', 'd'].includes(key)) {
       setGameState(prev => ({ ...prev, keys: { ...prev.keys, right: false } }));
     }
+  }, []);
+
+  // Virtual joystick handler
+  const handleJoystickDirection = useCallback((direction: { x: number; y: number }) => {
+    setGameState(prev => ({
+      ...prev,
+      keys: {
+        up: direction.y < -0.3,
+        down: direction.y > 0.3,
+        left: direction.x < -0.3,
+        right: direction.x > 0.3
+      }
+    }));
   }, []);
 
   // Event listeners
@@ -164,8 +178,8 @@ export const Game = () => {
         />
       </div>
       
-      {/* Simple controls indicator */}
-      <div className="absolute bottom-4 left-4 z-20">
+      {/* Desktop controls indicator */}
+      <div className="absolute bottom-4 left-4 z-20 hidden md:block">
         <div className="bg-black/70 backdrop-blur-sm rounded-lg p-3 border border-gray-600">
           <div className="text-xs text-gray-300 space-y-1">
             <div>🔺 W/↑/Space: Fly Up</div>
@@ -175,6 +189,19 @@ export const Game = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile instructions */}
+      <div className="absolute bottom-4 right-4 z-20 md:hidden">
+        <div className="bg-black/70 backdrop-blur-sm rounded-lg p-3 border border-gray-600">
+          <div className="text-xs text-gray-300 text-center">
+            <div>✈️ Use joystick to fly</div>
+            <div>🌌 Explore the endless space</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile touch controls */}
+      <VirtualJoystick onDirectionChange={handleJoystickDirection} />
     </div>
   );
 };

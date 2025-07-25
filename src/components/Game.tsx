@@ -78,7 +78,7 @@ export const Game = () => {
     lives: 3,
     distance: 0,
     level: 1,
-    speed: 3,
+    speed: 1.5,
     invulnerable: false,
     boostActive: false,
     boostCooldown: 0,
@@ -432,7 +432,7 @@ export const Game = () => {
       lives: 3,
       distance: 0,
       level: 1,
-      speed: 3,
+      speed: 1.5,
       invulnerable: false,
       boostActive: false,
       boostCooldown: 0,
@@ -454,7 +454,7 @@ export const Game = () => {
       levelComplete: false,
       position: { x: 200, y: 300 },
       velocity: { x: 0, y: 0 },
-      speed: Math.min(8, prev.speed + 0.5),
+      speed: Math.min(4, prev.speed + 0.3),
       lives: Math.min(5, prev.lives + 1),
       score: prev.score + 1000 * prev.level
     }));
@@ -482,18 +482,18 @@ export const Game = () => {
 
     const gameLoop = () => {
       setGameState(prev => {
-        const gravity = 0.3;
-        const friction = 0.95;
-        const baseSpeed = prev.speed + (prev.boostActive ? 3 : 0);
+        const gravity = 0.2;
+        const friction = 0.88;
+        const baseSpeed = prev.speed + (prev.boostActive ? 2 : 0);
         
         let newVelX = prev.velocity.x * friction;
         let newVelY = prev.velocity.y * friction + gravity;
         
-        // Apply input forces
-        if (prev.keys.up) newVelY -= 1.2;
-        if (prev.keys.down) newVelY += 0.8;
-        if (prev.keys.left) newVelX -= 0.8;
-        if (prev.keys.right) newVelX += 1.0;
+        // Apply input forces (reduced for better control)
+        if (prev.keys.up) newVelY -= 0.8;
+        if (prev.keys.down) newVelY += 0.6;
+        if (prev.keys.left) newVelX -= 0.6;
+        if (prev.keys.right) newVelX += 0.7;
         
         // Check if in updraft zone
         const inUpdraftZone = updraftZones.find(zone => 
@@ -504,8 +504,8 @@ export const Game = () => {
         }
         
         // Apply velocity limits
-        newVelX = Math.max(-baseSpeed, Math.min(baseSpeed, newVelX));
-        newVelY = Math.max(-baseSpeed * 1.5, Math.min(baseSpeed, newVelY));
+        newVelX = Math.max(-baseSpeed * 2, Math.min(baseSpeed * 2, newVelX));
+        newVelY = Math.max(-baseSpeed * 2, Math.min(baseSpeed * 1.5, newVelY));
         
         let newX = prev.position.x + newVelX;
         let newY = prev.position.y + newVelY;
@@ -628,7 +628,7 @@ export const Game = () => {
           x={gameState.position.x} 
           y={gameState.position.y}
           velocity={Math.sqrt(gameState.velocity.x ** 2 + gameState.velocity.y ** 2)}
-          forwardSpeed={gameState.speed + (gameState.boostActive ? 3 : 0)}
+          forwardSpeed={gameState.speed + (gameState.boostActive ? 2 : 0)}
           rotation={gameState.velocity.x * 2}
           stalled={false}
           keys={gameState.keys}

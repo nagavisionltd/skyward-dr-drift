@@ -65,7 +65,7 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
     if (keys.right) finalRotation += 10;
     
     // Add wind effect at high speed
-    if (forwardSpeed >= 4) {
+    if (forwardSpeed >= 2.5) {
       finalRotation += Math.sin(Date.now() * 0.01) * 2;
     }
     
@@ -82,7 +82,7 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
     let effects: React.CSSProperties = {};
     
     // Wind effects at high speed
-    if (forwardSpeed >= 4) {
+    if (forwardSpeed >= 2.5) {
       const windSway = Math.sin(Date.now() * 0.008) * 2;
       const windScale = 1 + Math.sin(Date.now() * 0.012) * 0.03;
       effects.transform = `scaleX(${windScale}) translateX(${windSway}px)`;

@@ -79,18 +79,18 @@ export const Game = () => {
   useEffect(() => {
     const gameLoop = () => {
       setGameState(prev => {
-        const gravity = 0.15;
-        const friction = 0.92;
-        const inputForce = 0.6;
-        const maxSpeed = 8;
+        const gravity = 0.12;
+        const friction = 0.96;
+        const inputForce = 0.3;
+        const maxSpeed = 4;
         
         let newVelX = prev.velocity.x * friction;
         let newVelY = prev.velocity.y * friction + gravity;
         
-        // Apply input forces
+        // Apply input forces (gradual acceleration)
         if (prev.keys.up) newVelY -= inputForce;
-        if (prev.keys.down) newVelY += inputForce * 0.7;
-        if (prev.keys.left) newVelX -= inputForce;
+        if (prev.keys.down) newVelY += inputForce * 0.6;
+        if (prev.keys.left) newVelX -= inputForce * 0.8;
         if (prev.keys.right) newVelX += inputForce;
         
         // Check if in updraft zone
@@ -157,8 +157,8 @@ export const Game = () => {
           x={gameState.position.x} 
           y={gameState.position.y}
           velocity={Math.sqrt(gameState.velocity.x ** 2 + gameState.velocity.y ** 2)}
-          forwardSpeed={2}
-          rotation={gameState.velocity.x * 3}
+          forwardSpeed={Math.sqrt(gameState.velocity.x ** 2 + gameState.velocity.y ** 2)}
+          rotation={gameState.velocity.x * 2}
           stalled={false}
           keys={gameState.keys}
         />

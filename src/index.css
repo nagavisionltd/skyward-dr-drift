@@ -169,12 +169,25 @@ All colors MUST be HSL.
 
 @keyframes titleGlow {
   0%, 100% { 
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8));
+    text-shadow: 
+      0 0 60px rgba(59, 130, 246, 0.8),
+      0 0 120px rgba(59, 130, 246, 0.4),
+      0 0 200px rgba(59, 130, 246, 0.2);
+  }
+  50% { 
+    text-shadow: 
+      0 0 80px rgba(59, 130, 246, 1),
+      0 0 160px rgba(59, 130, 246, 0.6),
+      0 0 240px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@keyframes titleBreathe {
+  0%, 100% { 
     transform: scale(1);
   }
   50% { 
-    filter: drop-shadow(0 0 20px rgba(59, 130, 246, 1));
-    transform: scale(1.02);
+    transform: scale(1.05);
   }
 }
 

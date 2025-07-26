@@ -15,7 +15,15 @@ export const VirtualJoystick = ({ onDirectionChange, onBoost }: VirtualJoystickP
 
   // Check if device supports touch
   useEffect(() => {
-    setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    const checkMobile = () => {
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth <= 768;
+      setIsMobile(isTouchDevice && isSmallScreen);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Don't render on desktop
@@ -43,7 +51,7 @@ export const VirtualJoystick = ({ onDirectionChange, onBoost }: VirtualJoystickP
     const deltaY = clientY - centerY;
     
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const maxDistance = 40;
+    const maxDistance = 50; // Increased for better control
     
     let x = deltaX;
     let y = deltaY;
@@ -55,9 +63,9 @@ export const VirtualJoystick = ({ onDirectionChange, onBoost }: VirtualJoystickP
     
     setPosition({ x, y });
     
-    // Normalize direction values between -1 and 1
-    const normalizedX = x / maxDistance;
-    const normalizedY = -y / maxDistance; // Invert Y for up/down
+    // Normalize direction values with improved sensitivity
+    const normalizedX = Math.max(-1, Math.min(1, x / maxDistance * 1.2));
+    const normalizedY = Math.max(-1, Math.min(1, -y / maxDistance * 1.2)); // Invert Y for up/down
     
     onDirectionChange({ x: normalizedX, y: normalizedY });
   }, [isDragging, onDirectionChange]);

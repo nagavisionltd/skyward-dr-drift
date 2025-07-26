@@ -60,16 +60,17 @@ export const StartScreen = ({ onStartGame }: StartScreenProps) => {
         {/* Game title */}
         <div className="mb-8">
           <h1 
-            className="text-6xl font-bold mb-2 bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent"
+            className="text-8xl lg:text-9xl xl:text-[12rem] font-bold mb-2 bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent leading-none"
             style={{
-              textShadow: '0 0 30px rgba(59, 130, 246, 0.5)',
-              animation: 'titleGlow 3s ease-in-out infinite',
+              textShadow: '0 0 60px rgba(59, 130, 246, 0.8), 0 0 120px rgba(59, 130, 246, 0.4)',
+              animation: 'titleGlow 3s ease-in-out infinite, titleBreathe 4s ease-in-out infinite',
+              fontSize: 'clamp(3rem, 15vw, 12rem)',
             }}
           >
             SKYWARD
           </h1>
           <h2 
-            className="text-2xl font-semibold text-primary/80 animate-pulse"
+            className="text-3xl lg:text-4xl xl:text-5xl font-semibold text-primary/80 animate-pulse"
           >
             Dr. Drift
           </h2>
@@ -93,7 +94,7 @@ export const StartScreen = ({ onStartGame }: StartScreenProps) => {
           
           {/* Instruction text */}
           <p className="text-sm text-muted-foreground/80 animate-pulse">
-            Collect glowing orbs • Avoid obstacles • Reach the goal
+            Collect glowing orbs • Reach the goal • Score points
           </p>
         </div>
         

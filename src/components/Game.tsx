@@ -81,10 +81,10 @@ export const Game = () => {
     setPlayerState(prev => ({
       ...prev,
       keys: {
-        up: direction.y > 0.3,
-        down: direction.y < -0.3,
-        left: direction.x < -0.3,
-        right: direction.x > 0.3,
+        up: direction.y > 0.2,
+        down: direction.y < -0.2,
+        left: direction.x < -0.2,
+        right: direction.x > 0.2,
       }
     }));
   }, []);
@@ -98,11 +98,11 @@ export const Game = () => {
 
     const gameLoop = () => {
       setPlayerState(prev => {
-        // Physics constants
-        const acceleration = 0.3;
-        const deceleration = 0.85;
-        const maxSpeed = 6;
-        const boostMultiplier = isBoosting ? 1.8 : 1;
+        // Physics constants - Fixed for better responsiveness
+        const acceleration = 0.8;
+        const deceleration = 0.95;
+        const maxSpeed = 10;
+        const boostMultiplier = isBoosting ? 2.0 : 1;
         
         let newVelocity = { ...prev.velocity };
         

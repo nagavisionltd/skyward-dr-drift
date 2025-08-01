@@ -17,44 +17,35 @@ interface DoctorCharacterProps {
 
 export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, stalled = false, keys }: DoctorCharacterProps) => {
   const [animationFrame, setAnimationFrame] = useState(0);
-  const [lastMovementState, setLastMovementState] = useState({ up: false, down: false, left: false, right: false });
-  const isHighSpeed = animationFrame === 5 && keys.right;
-  // Animation cycling - maintain frame 5 when right is held, even with up/down movement
+  
+  // Simplified animation logic based on velocity and input
+  const isHighSpeed = forwardSpeed >= 6; // Activate final flight at high speed
+  const finalFrame = isHighSpeed ? 5 : Math.min(4, animationFrame);
+  
   useEffect(() => {
     const isMoving = keys.up || keys.down || keys.left || keys.right;
-    const rightKeyChanged = keys.right !== lastMovementState.right;
-    const horizontalMovementChanged = keys.left !== lastMovementState.left || keys.right !== lastMovementState.right;
+    
+    // If high speed, go directly to final frame
+    if (isHighSpeed) {
+      setAnimationFrame(5);
+      return;
+    }
     
     if (!isMoving) {
-      setAnimationFrame(0); // Reset to first frame when not moving
-      setLastMovementState({ up: false, down: false, left: false, right: false });
-      return;
-    }
-    
-    // Only restart animation if horizontal movement changed or right key was released
-    if (horizontalMovementChanged || (!keys.right && rightKeyChanged)) {
       setAnimationFrame(0);
-      setLastMovementState({ ...keys });
-    } else {
-      // Update last movement state for up/down without resetting animation
-      setLastMovementState({ ...keys });
-    }
-    
-    // Don't start animation interval if we're at frame 5 and right is held
-    if (animationFrame === 5 && keys.right) {
       return;
     }
     
+    // Animate through frames for normal speed
     const interval = setInterval(() => {
       setAnimationFrame(prev => {
-        const nextFrame = prev + 1;
-        // If we reach the last frame (5), stay there
-        return nextFrame >= 6 ? 5 : nextFrame;
+        if (isHighSpeed) return 5; // Force final frame at high speed
+        return prev >= 4 ? 4 : prev + 1; // Cycle through frames 0-4
       });
-    }, 200);
+    }, 250);
     
     return () => clearInterval(interval);
-  }, [keys.up, keys.down, keys.left, keys.right, animationFrame]);
+  }, [keys.up, keys.down, keys.left, keys.right, isHighSpeed]);
 
   // Use physics rotation with additional effects
   const getRotation = () => {
@@ -107,7 +98,7 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
       '/lovable-uploads/dd3a3a22-d446-4fc2-b490-ccc05800b1d8.png',
       '/lovable-uploads/720cec1c-7fa2-4421-96c5-279b81204b32.png',
     ];
-    return sprites[animationFrame];
+    return sprites[finalFrame];
   };
 
   return (
@@ -120,7 +111,7 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
       }}
     >
       {/* Energy Aura for High Speed */}
-      {isHighSpeed && (
+      {finalFrame === 5 && (
         <>
           {/* Main Energy Aura */}
           <div 

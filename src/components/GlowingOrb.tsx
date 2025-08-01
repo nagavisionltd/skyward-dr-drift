@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo, useCallback } from 'react';
 
 interface GlowingOrbProps {
   x: number;
@@ -10,37 +10,41 @@ interface GlowingOrbProps {
   cameraX: number;
 }
 
-export const GlowingOrb = ({ x, y, color, points, collected, onCollect, cameraX }: GlowingOrbProps) => {
-  const [playerX, setPlayerX] = useState(0);
-  const [playerY, setPlayerY] = useState(0);
-
-  // Check for collision with player
+export const GlowingOrb = memo(({ x, y, color, points, collected, onCollect, cameraX }: GlowingOrbProps) => {
+  // Check for collision with player using a more efficient approach
   useEffect(() => {
-    const gameLoop = () => {
-      // Get current player position from game state
+    if (collected) return;
+    
+    let animationId: number;
+    
+    const checkCollision = () => {
       const player = document.querySelector('[data-player="true"]');
       if (player) {
         const rect = player.getBoundingClientRect();
-        const currentPlayerX = rect.left + cameraX;
-        const currentPlayerY = rect.top;
-        
-        setPlayerX(currentPlayerX);
-        setPlayerY(currentPlayerY);
+        const playerX = rect.left + cameraX;
+        const playerY = rect.top;
         
         // Check collision
         const distance = Math.sqrt(
-          Math.pow(currentPlayerX - x, 2) + Math.pow(currentPlayerY - y, 2)
+          Math.pow(playerX - x, 2) + Math.pow(playerY - y, 2)
         );
         
-        if (distance < 40 && !collected) {
+        if (distance < 40) {
           onCollect();
+          return; // Stop checking once collected
         }
       }
       
-      requestAnimationFrame(gameLoop);
+      animationId = requestAnimationFrame(checkCollision);
     };
     
-    gameLoop();
+    animationId = requestAnimationFrame(checkCollision);
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
   }, [x, y, collected, onCollect, cameraX]);
 
   if (collected) return null;
@@ -91,4 +95,4 @@ export const GlowingOrb = ({ x, y, color, points, collected, onCollect, cameraX 
       </div>
     </div>
   );
-};
+});

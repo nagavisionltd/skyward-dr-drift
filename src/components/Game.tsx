@@ -96,13 +96,26 @@ export const Game = () => {
   useEffect(() => {
     if (!gameStarted || gameState.gameOver) return;
 
-    const gameLoop = () => {
+    let lastTime = 0;
+    let animationId: number;
+    
+    const gameLoop = (currentTime: number) => {
+      const deltaTime = currentTime - lastTime;
+      
+      // Limit to ~60fps for consistent performance
+      if (deltaTime < 16.67) {
+        animationId = requestAnimationFrame(gameLoop);
+        return;
+      }
+      
+      lastTime = currentTime;
+      
       setPlayerState(prev => {
-        // Physics constants - Fixed for better responsiveness
-        const acceleration = 0.8;
-        const deceleration = 0.95;
-        const maxSpeed = 10;
-        const boostMultiplier = isBoosting ? 2.0 : 1;
+        // Physics constants - optimized for smooth gameplay
+        const acceleration = 0.6;
+        const deceleration = 0.92;
+        const maxSpeed = 8;
+        const boostMultiplier = isBoosting ? 1.8 : 1;
         
         let newVelocity = { ...prev.velocity };
         
@@ -132,10 +145,6 @@ export const Game = () => {
         newX = Math.max(25, Math.min(10000 - 75, newX));
         newY = Math.max(25, Math.min(window.innerHeight - 75, newY));
         
-        // Update game state
-        updateDistance(newX);
-        checkCollisions(newX, newY);
-        
         return {
           ...prev,
           position: { x: newX, y: newY },
@@ -143,13 +152,22 @@ export const Game = () => {
         };
       });
       
+      // Update game state less frequently to reduce overhead
+      updateDistance(playerState.position.x);
+      
       if (!gameState.gameOver) {
-        requestAnimationFrame(gameLoop);
+        animationId = requestAnimationFrame(gameLoop);
       }
     };
     
-    gameLoop();
-  }, [gameStarted, gameState.gameOver, updateDistance, checkCollisions, isBoosting]);
+    animationId = requestAnimationFrame(gameLoop);
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [gameStarted, gameState.gameOver, updateDistance, isBoosting]);
 
   const cameraX = Math.max(0, playerState.position.x - window.innerWidth / 2);
 

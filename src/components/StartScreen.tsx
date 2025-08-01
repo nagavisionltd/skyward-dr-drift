@@ -28,8 +28,29 @@ export const StartScreen = ({ onStartGame }: StartScreenProps) => {
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Psychedelic background */}
-      <PsychedelicBackground />
+      {/* Blue sky background with pixel clouds */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(180deg, #87CEEB 0%, #E0F6FF 50%, #87CEEB 100%)'
+        }}
+      >
+        {/* Pixel-style clouds */}
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute bg-white/80 rounded-none"
+            style={{
+              left: `${10 + (i * 15) % 80}%`,
+              top: `${20 + (i % 3) * 20}%`,
+              width: `${60 + (i % 3) * 20}px`,
+              height: `${30 + (i % 2) * 15}px`,
+              clipPath: 'polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%)',
+              animation: `float ${3 + (i % 2)}s ease-in-out infinite ${i * 0.5}s`
+            }}
+          />
+        ))}
+      </div>
       
       {/* Demo character flying across */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -67,13 +88,8 @@ export const StartScreen = ({ onStartGame }: StartScreenProps) => {
               fontSize: 'clamp(3rem, 15vw, 12rem)',
             }}
           >
-            SKYWARD
+            Dr Jack in Space
           </h1>
-          <h2 
-            className="text-3xl lg:text-4xl xl:text-5xl font-semibold text-primary/80 animate-pulse"
-          >
-            Dr. Drift
-          </h2>
         </div>
         
         {/* Start button */}

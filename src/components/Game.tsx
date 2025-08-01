@@ -203,19 +203,6 @@ export const Game = () => {
       >
         <SpaceBackground width={10000} height={window.innerHeight} />
         
-        {/* Glowing Orbs */}
-        {gameState.orbs.map(orb => (
-          <GlowingOrb
-            key={orb.id}
-            x={orb.x}
-            y={orb.y}
-            color={orb.color}
-            points={orb.points}
-            collected={orb.collected}
-            onCollect={() => collectOrb(orb.id)}
-            cameraX={cameraX}
-          />
-        ))}
         
         {/* Level Goal */}
         <LevelGoal

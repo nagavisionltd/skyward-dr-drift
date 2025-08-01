@@ -127,45 +127,65 @@ export const VirtualJoystick = ({ onDirectionChange, onBoost }: VirtualJoystickP
   };
 
   return (
-    <div className="fixed bottom-4 left-4 z-30 flex items-end gap-4">
-      {/* Virtual Joystick */}
+    <div className="fixed bottom-4 left-4 z-30 flex items-end gap-6">
+      {/* 3D Virtual Joystick */}
       <div className="relative">
         <div
           ref={containerRef}
-          className="w-24 h-24 bg-card/60 backdrop-blur-sm border-2 border-border rounded-full flex items-center justify-center touch-none"
+          className="w-28 h-28 rounded-full touch-none relative"
+          style={{
+            background: 'linear-gradient(135deg, #4A5568 0%, #2D3748 50%, #1A202C 100%)',
+            boxShadow: 'inset 0 4px 8px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.2)',
+            border: '3px solid #4A5568'
+          }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleEnd}
           onMouseDown={handleMouseDown}
         >
+          {/* 3D Joystick Knob */}
           <div
             ref={joystickRef}
-            className="w-8 h-8 bg-primary rounded-full transition-transform duration-75"
+            className="w-12 h-12 rounded-full absolute top-1/2 left-1/2 transition-transform duration-75"
             style={{
-              transform: `translate(${position.x}px, ${position.y}px)`,
+              transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+              background: 'linear-gradient(135deg, #63B3ED 0%, #3182CE 50%, #2C5282 100%)',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.3)',
+              border: '2px solid #4299E1'
             }}
           />
+          {/* Center dot */}
+          <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-gray-400 rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-50" />
         </div>
-        <p className="text-xs text-center text-muted-foreground mt-1">Move</p>
+        <p className="text-xs text-center text-white/80 mt-2 font-semibold">MOVE</p>
       </div>
 
-      {/* Boost Button */}
+      {/* 3D Boost Button */}
       <div className="flex flex-col items-center">
         <button
-          className={`w-16 h-16 rounded-full border-2 border-border backdrop-blur-sm touch-none transition-all ${
+          className={`w-20 h-20 rounded-full touch-none transition-all transform ${
             isBoosting 
-              ? 'bg-primary text-primary-foreground scale-95' 
-              : 'bg-card/60 text-foreground hover:bg-card/80'
+              ? 'scale-90' 
+              : 'hover:scale-105'
           }`}
+          style={{
+            background: isBoosting 
+              ? 'linear-gradient(135deg, #F56565 0%, #E53E3E 50%, #C53030 100%)'
+              : 'linear-gradient(135deg, #68D391 0%, #48BB78 50%, #38A169 100%)',
+            boxShadow: isBoosting
+              ? 'inset 0 4px 8px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)'
+              : '0 6px 12px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.3)',
+            border: '3px solid rgba(255,255,255,0.3)'
+          }}
           onTouchStart={handleBoostPress}
           onTouchEnd={handleBoostRelease}
           onMouseDown={handleBoostPress}
           onMouseUp={handleBoostRelease}
           onMouseLeave={handleBoostRelease}
         >
-          ⚡
+          <span className="text-2xl">⚡</span>
         </button>
-        <p className="text-xs text-center text-muted-foreground mt-1">Boost</p>
+        <p className="text-xs text-center text-white/80 mt-2 font-semibold">BOOST</p>
       </div>
     </div>
   );

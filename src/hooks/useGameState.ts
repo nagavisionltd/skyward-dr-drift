@@ -16,6 +16,8 @@ export interface GameStateData {
   orbs: GlowingOrbData[];
   gameOver: boolean;
   levelComplete: boolean;
+  currentLevel: number;
+  totalLevels: number;
 }
 
 const generateOrbs = (): GlowingOrbData[] => {
@@ -56,9 +58,11 @@ export const useGameState = () => {
     score: 0,
     lives: 3,
     distance: 0,
-    orbs: generateOrbs(),
+    orbs: [],
     gameOver: false,
     levelComplete: false,
+    currentLevel: 1,
+    totalLevels: 3,
   });
 
   const collectOrb = useCallback((orbId: string) => {
@@ -91,13 +95,38 @@ export const useGameState = () => {
   }, []);
 
   const resetGame = useCallback(() => {
+    setGameState(prev => ({
+      score: prev.score, // Keep score across levels
+      lives: 3,
+      distance: 0,
+      orbs: [],
+      gameOver: false,
+      levelComplete: false,
+      currentLevel: prev.currentLevel,
+      totalLevels: prev.totalLevels,
+    }));
+  }, []);
+
+  const nextLevel = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      currentLevel: prev.currentLevel + 1,
+      distance: 0,
+      orbs: [],
+      levelComplete: false,
+    }));
+  }, []);
+
+  const resetToLevel1 = useCallback(() => {
     setGameState({
       score: 0,
       lives: 3,
       distance: 0,
-      orbs: generateOrbs(),
+      orbs: [],
       gameOver: false,
       levelComplete: false,
+      currentLevel: 1,
+      totalLevels: 3,
     });
   }, []);
 
@@ -107,5 +136,7 @@ export const useGameState = () => {
     checkCollisions,
     updateDistance,
     resetGame,
+    nextLevel,
+    resetToLevel1,
   };
 };

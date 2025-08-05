@@ -28,7 +28,7 @@ export const Game = () => {
     keys: { up: false, down: false, left: false, right: false }
   });
   
-  const { gameState, collectOrb, checkCollisions, updateDistance, resetGame } = useGameState();
+  const { gameState, collectOrb, checkCollisions, updateDistance, resetGame, nextLevel, resetToLevel1 } = useGameState();
   const [gameStarted, setGameStarted] = useState(false);
   const [isBoosting, setIsBoosting] = useState(false);
   const [showControls, setShowControls] = useState(false);
@@ -79,15 +79,15 @@ export const Game = () => {
     };
   }, [handleKeyDown, handleKeyUp]);
 
-  // Mobile controls handlers
+  // Mobile controls handlers - fixed for touch flying
   const handleDirectionChange = useCallback((direction: { x: number; y: number }) => {
     setPlayerState(prev => ({
       ...prev,
       keys: {
-        up: direction.y > 0.2,
-        down: direction.y < -0.2,
-        left: direction.x < -0.2,
-        right: direction.x > 0.2,
+        up: direction.y > 0.1,
+        down: direction.y < -0.1,
+        left: direction.x < -0.1,
+        right: direction.x > 0.1,
       }
     }));
   }, []);
@@ -148,8 +148,10 @@ export const Game = () => {
         newX = Math.max(25, Math.min(10000 - 75, newX));
         newY = Math.max(25, Math.min(window.innerHeight - 75, newY));
         
-        // Check for level completion
-        if (newX >= 9500 && !showLevelComplete) {
+        // Check for level completion - different goals per level
+        const levelGoals = [9500, 12000, 15000]; // Goals for levels 1, 2, 3
+        const currentGoal = levelGoals[gameState.currentLevel - 1] || 9500;
+        if (newX >= currentGoal && !showLevelComplete) {
           setShowLevelComplete(true);
         }
         
@@ -181,7 +183,7 @@ export const Game = () => {
 
   const handleStartGame = () => {
     setGameStarted(true);
-    resetGame();
+    resetToLevel1();
   };
 
   const handleResetGame = () => {
@@ -192,7 +194,7 @@ export const Game = () => {
       velocity: { x: 0, y: 0 },
       keys: { up: false, down: false, left: false, right: false }
     });
-    resetGame();
+    resetToLevel1();
   };
 
   const toggleFullscreen = () => {
@@ -205,10 +207,19 @@ export const Game = () => {
     }
   };
 
-  const handleContinueToLevel2 = () => {
+  const handleContinueToNextLevel = () => {
     setShowLevelComplete(false);
-    // For now, restart the level - we'll implement level 2 later
-    handleResetGame();
+    if (gameState.currentLevel < gameState.totalLevels) {
+      nextLevel();
+      setPlayerState({
+        position: { x: 200, y: 300 },
+        velocity: { x: 0, y: 0 },
+        keys: { up: false, down: false, left: false, right: false }
+      });
+    } else {
+      // Game completed - restart from level 1
+      handleResetGame();
+    }
   };
 
   // Show start screen if game hasn't started
@@ -226,26 +237,26 @@ export const Game = () => {
         {isFullscreen ? '⛶' : '⛶'}
       </button>
 
-      {/* Controls Button */}
+      {/* Controls Button - moved to bottom right */}
       <button
         onClick={() => setShowControls(!showControls)}
-        className="fixed top-4 left-4 z-50 px-4 py-2 bg-black/50 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm hover:bg-black/70 transition-all"
+        className="fixed bottom-4 right-20 z-50 px-4 py-2 bg-black/50 backdrop-blur-sm border border-white/20 rounded-lg text-white text-sm hover:bg-black/70 transition-all"
       >
         Controls
       </button>
 
-      {/* Controls Panel */}
+      {/* Controls Panel - positioned near button */}
       {showControls && (
         <div 
-          className="fixed top-16 left-4 z-40 bg-black/80 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-white text-sm max-w-xs"
+          className="fixed bottom-20 right-4 z-40 bg-black/80 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-white text-sm max-w-xs"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="space-y-2">
             <div><strong>Movement:</strong></div>
             <div>• Arrow Keys or WASD</div>
             <div>• Space/Up Arrow: Fly up</div>
-            <div>• Mobile: Use joystick</div>
-            <div><strong>Boost:</strong> Hold for extra speed</div>
+            <div>• Mobile: Touch screen to fly</div>
+            <div><strong>Boost:</strong> Hold boost button</div>
             <div><strong>Goal:</strong> Reach the finish line!</div>
           </div>
         </div>
@@ -269,10 +280,10 @@ export const Game = () => {
       >
         <SpaceBackground width={10000} height={window.innerHeight} />
         
-        {/* Level Goal */}
+        {/* Level Goal - dynamic based on current level */}
         <LevelGoal
           worldX={playerState.position.x}
-          goalX={9500}
+          goalX={[9500, 12000, 15000][gameState.currentLevel - 1] || 9500}
           cameraX={cameraX}
         />
         
@@ -288,12 +299,15 @@ export const Game = () => {
         />
       </div>
       
-      {/* Game HUD */}
-      <GameHUD 
-        score={gameState.score}
-        lives={gameState.lives}
-        distance={gameState.distance}
-      />
+      {/* Game HUD - now shows current level */}
+      <div className="fixed top-4 left-4 z-40 bg-black/50 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-white">
+        <div className="text-xl font-bold mb-2">Level {gameState.currentLevel}</div>
+        <div className="text-sm space-y-1">
+          <div>Score: {gameState.score}</div>
+          <div>Lives: {gameState.lives}</div>
+          <div>Distance: {Math.floor(gameState.distance)}m</div>
+        </div>
+      </div>
       
       {/* Mobile Controls */}
       {isMobile && (
@@ -308,13 +322,17 @@ export const Game = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-gradient-to-br from-blue-900/90 to-purple-900/90 border border-white/20 rounded-2xl p-8 text-center text-white max-w-md mx-4">
             <h2 className="text-4xl font-bold mb-4 text-yellow-400">🎉 CONGRATULATIONS! 🎉</h2>
-            <p className="text-xl mb-6">You completed Level 1!</p>
-            <p className="text-lg mb-8 text-blue-200">Get ready for Level 2... (Coming soon!)</p>
+            <p className="text-xl mb-6">You completed Level {gameState.currentLevel}!</p>
+            {gameState.currentLevel < gameState.totalLevels ? (
+              <p className="text-lg mb-8 text-blue-200">Get ready for Level {gameState.currentLevel + 1}!</p>
+            ) : (
+              <p className="text-lg mb-8 text-green-200">🏆 You completed all levels! 🏆</p>
+            )}
             <button
-              onClick={handleContinueToLevel2}
+              onClick={handleContinueToNextLevel}
               className="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 rounded-lg font-semibold text-lg transition-all transform hover:scale-105"
             >
-              Continue
+              {gameState.currentLevel < gameState.totalLevels ? 'Next Level' : 'Play Again'}
             </button>
           </div>
         </div>

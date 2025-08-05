@@ -115,12 +115,6 @@ export const VirtualJoystick = ({ onDirectionChange, onBoost }: TouchControlsPro
         <p className="text-xs text-center text-white/80 mt-2 font-semibold">BOOST</p>
       </div>
 
-      {/* Instructions */}
-      <div className="fixed bottom-4 left-4 z-30 bg-black/50 backdrop-blur-sm border border-white/20 rounded-lg p-3 text-white text-sm max-w-xs">
-        <div className="font-semibold mb-1">Touch Controls:</div>
-        <div>• Touch screen to fly toward that direction</div>
-        <div>• Hold BOOST button for extra speed</div>
-      </div>
     </>
   );
 };

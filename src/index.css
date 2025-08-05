@@ -229,3 +229,29 @@ All colors MUST be HSL.
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
 }
+
+/* Force landscape mode on mobile */
+.landscape-mode {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .landscape-mode {
+    transform: rotate(90deg);
+    transform-origin: center center;
+    width: 100vh;
+    height: 100vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -50vw;
+    margin-left: -50vh;
+  }
+  
+  body.landscape-forced {
+    overflow: hidden;
+  }
+}

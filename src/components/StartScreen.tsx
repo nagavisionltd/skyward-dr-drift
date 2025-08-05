@@ -1,33 +1,28 @@
-import { PsychedelicBackground } from './PsychedelicBackground';
-import { DoctorCharacter } from './DoctorCharacter';
 import { useState, useEffect } from 'react';
+import drJackHero from '../assets/dr-jack-hero.png';
 
 interface StartScreenProps {
   onStartGame: () => void;
 }
 
 export const StartScreen = ({ onStartGame }: StartScreenProps) => {
-  const [demoPosition, setDemoPosition] = useState({ x: -100, y: 300 });
-  
-  // Demo animation - Dr. Jack flying across screen
+  // Force landscape mode
   useEffect(() => {
-    const animateDemo = () => {
-      setDemoPosition(prev => {
-        const newX = prev.x + 8;
-        // Reset when character goes off screen
-        if (newX > window.innerWidth + 100) {
-          return { x: -100, y: 200 + Math.random() * 200 };
-        }
-        return { x: newX, y: prev.y };
-      });
+    const lockOrientation = () => {
+      if ('orientation' in screen && screen.orientation && 'lock' in screen.orientation) {
+        (screen.orientation as any).lock('landscape').catch(() => {
+          // Fallback: just set CSS for landscape
+          document.body.style.transform = 'rotate(90deg)';
+          document.body.style.transformOrigin = 'center center';
+        });
+      }
     };
     
-    const interval = setInterval(animateDemo, 16); // ~60fps
-    return () => clearInterval(interval);
+    lockOrientation();
   }, []);
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center landscape-mode">
       {/* Blue sky background with pixel clouds */}
       <div 
         className="absolute inset-0"
@@ -52,26 +47,15 @@ export const StartScreen = ({ onStartGame }: StartScreenProps) => {
         ))}
       </div>
       
-      {/* Demo character flying across */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <DoctorCharacter 
-          x={demoPosition.x} 
-          y={demoPosition.y}
-          velocity={8}
-          forwardSpeed={8}
-          rotation={5}
-          stalled={false}
-          keys={{ up: false, down: false, left: false, right: true }}
-        />
-        
-        {/* Speed blur trail effect */}
-        <div 
-          className="absolute w-32 h-2 opacity-60 animate-pulse"
+      {/* Static Dr Jack Hero Image */}
+      <div className="absolute left-1/4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+        <img 
+          src={drJackHero} 
+          alt="Dr Jack"
+          className="w-48 h-48 object-contain animate-bounce"
           style={{
-            left: `${demoPosition.x - 50}px`,
-            top: `${demoPosition.y + 25}px`,
-            background: 'linear-gradient(90deg, transparent 0%, #00E676 50%, transparent 100%)',
-            filter: 'blur(2px)',
+            imageRendering: 'pixelated',
+            filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))'
           }}
         />
       </div>

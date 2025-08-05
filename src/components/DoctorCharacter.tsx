@@ -179,7 +179,7 @@ export const DoctorCharacter = ({ x, y, velocity, forwardSpeed, rotation = 0, st
         style={{
           imageRendering: 'pixelated',
           filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))',
-          transform: keys.left ? 'scaleX(-1)' : 'scaleX(1)',
+          transform: keys.left && !keys.right ? 'scaleX(-1)' : 'scaleX(1)',
           ...getCharacterEffects()
         }}
       />
